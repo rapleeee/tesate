@@ -12,7 +12,7 @@ const ScoreAdsIklan = ({ route, navigation }) => {
       CommonActions.reset({
         index: 0,
         routes: [
-          { name: 'MainApp' }, // Ganti 'Main' dengan nama layar utama Anda
+          { name: 'MainApp' }, 
         ],
       })
     );

@@ -3,15 +3,17 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import React from 'react'
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
+import useResponsive from '../Shared/ResponsiveUI';
 
 export default function Start() {
 
+    const { wp, hp } = useResponsive();
 const navigation = useNavigation();
 
   return (
-    <SafeAreaView style={{ flex:1, backgroundColor: "#ffff"}}>
+    <SafeAreaView style={[styles.container]}>
         <StatusBar/>
-        <Image style={{resizeMode:"center", width:430, height:500}} source={require("./../assets/financial.png")}/>
+        <Image style={{resizeMode:"center", width:430, height:320,marginTop:5}} source={require("./../assets/financial.png")}/>
         <View>
             <Text style={styles.h1}>Saraya Nusantara</Text>
             <Text style={styles.h2}>Edukasi Keuangan Digital Khusus Pelaku Bisnis/UMKM</Text>
@@ -28,6 +30,10 @@ const navigation = useNavigation();
 }
 
 const styles = StyleSheet.create({
+    container:{
+        flex:1,
+        backgroundColor: "#ffff"
+    },
     h1:{
         fontWeight:'bold',
         textAlign:'center',

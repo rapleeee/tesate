@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { auth, db } from '../../firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import useResponsive from '../Shared/ResponsiveUI';
 
 const MainApp = () => {
   const flatListRef = useRef(null);
@@ -14,6 +15,7 @@ const MainApp = () => {
   const navigation = useNavigation();
   const [user, setUser] = useState(null);
   const [fullname, setFullname] = useState('');
+  const {wp, hp}= useResponsive();
 
   useEffect(() => {
     const fetchUserFullname = async (uid) => {
@@ -117,7 +119,7 @@ const MainApp = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#ffff" }}>
+    <SafeAreaView style={styles.safeareaview}>
       <ScrollView>
         <StatusBar />
         <View style={styles.card}>
@@ -256,6 +258,9 @@ const MainApp = () => {
 export default MainApp;
 
 const styles = StyleSheet.create({
+  safeareaview:{
+    flex: 1, backgroundColor: "#ffff" 
+  },
   card: {
     backgroundColor: '#7D0A0A',
     padding: 120,

@@ -111,7 +111,7 @@ export default function Singin() {
     <SafeAreaView style={{ flex: 1, backgroundColor: "#ffff" }}>
       <ScrollView>
         <StatusBar />
-        <Image source={require('./../assets/SignIn.png')} style={{ resizeMode: "cover", height: 400, width: 440 }} />
+        <Image source={require('./../assets/SignIn.png')} style={{ resizeMode: "cover", height: 300, width: 340, marginLeft:24 }} />
         <View style={{ alignItems: 'center' }}>
           <Text style={styles.h1}>Let's Sign In</Text>
           <Text style={styles.h2}>Hi! Welcome back Buddy, you've been missed</Text>

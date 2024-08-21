@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Button, Alert, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
 import { db, auth } from '../../firebase'; // Import auth and db from firebase
 import { collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore'; // Import Firestore functions
 import { signOut } from 'firebase/auth'; // Import signOut function from Firebase
@@ -75,6 +75,7 @@ export default function AdminPanel({ navigation }) {
   );
 
   return (
+    <ScrollView>
     <View style={styles.container}>
       <Text style={styles.title}>Admin Panel</Text>
       <TextInput
@@ -106,6 +107,7 @@ export default function AdminPanel({ navigation }) {
         <Button title="Logout" onPress={handleLogout} color="#FF3B30" />
       </View>
     </View>
+    </ScrollView>
   );
 }
 

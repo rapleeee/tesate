@@ -1,22 +1,31 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import tw from 'twrnc';
 import { reactQuestions } from '../../config/Questions';
 import { getAuth } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from './../../../firebase';
+import { useEffect } from 'react';
 
 const KuisLaporanKeuangan = ({ navigation }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
   const [isCorrect, setIsCorrect] = useState(null);
+  const [userUID, setUserUID] = useState(null);
 
   const auth = getAuth();
   const user = auth.currentUser;
-  const userUID = user ? user.uid : null;
-  const userEmail = user ? user.email : null;
+
+  useEffect(() => {
+    if (user) {
+      setUserUID(user.uid);
+    } else {
+      console.log('No user authenticated');
+      Alert.alert('Error', 'No user authenticated');
+    }
+  }, [user]);
 
   const saveQuizScore = async (uid, quizId, score) => {
     try {
@@ -29,14 +38,18 @@ const KuisLaporanKeuangan = ({ navigation }) => {
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
+        console.log('Existing user data:', userData);  // Log existing user data
         const updatedScores = { ...userData.scores, [quizId]: score };
         await setDoc(userDocRef, { ...userData, scores: updatedScores }, { merge: true });
         console.log('Score saved successfully');
+        // Alert.alert('Success', 'Score saved successfully');
       } else {
         console.log('No such document!');
+        Alert.alert('Error', 'No such document!');
       }
     } catch (error) {
       console.error('Failed to save score:', error);
+      Alert.alert('Error', 'Failed to save score');
     }
   };
 
@@ -48,6 +61,7 @@ const KuisLaporanKeuangan = ({ navigation }) => {
         })
         .catch((error) => {
           console.error('Error finishing quiz:', error);
+          Alert.alert('Error', 'Error finishing quiz');
         });
     } else {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
@@ -68,8 +82,19 @@ const KuisLaporanKeuangan = ({ navigation }) => {
     }
   };
 
+  if (!userUID) {
+    return (
+      <SafeAreaView>
+        <View style={tw`mt-6 p-4`}>
+          <Text style={tw`text-xl`}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView>
+    <ScrollView>
       <View style={tw`mt-6 p-4`}>
         <Text style={tw`text-2xl mb-4`}>
           {reactQuestions[currentQuestionIndex].question}
@@ -85,7 +110,7 @@ const KuisLaporanKeuangan = ({ navigation }) => {
                 : 'border-purple-500'
             }`}
             onPress={() => handleOptionPress(option)}
-            disabled={selectedOption}
+            disabled={selectedOption !== null}
           >
             <Text style={tw`text-lg`}>{option}</Text>
           </Pressable>
@@ -99,10 +124,9 @@ const KuisLaporanKeuangan = ({ navigation }) => {
           </Text>
         </Pressable>
       </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 export default KuisLaporanKeuangan;
-
-const styles = StyleSheet.create({});

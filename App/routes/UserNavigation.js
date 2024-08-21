@@ -38,6 +38,8 @@ import ScoreAdsIklan from "../etc/Kuis/ScoreAdsIklan";
 import KuisAds from "../etc/Materi/SubabMateri/AdsIklan/KuisAds";
 import AdminPanel from "../pages/AdminPanel";
 import DetailMateri from "../etc/DetailMateri";
+import ScoreDetail from "../etc/Kuis/ScoreDetail";
+import TabBarIcon from "../Components/TabBarIcon";
 
 
 const Tab = createBottomTabNavigator();
@@ -53,7 +55,7 @@ const CustomTabBarButton = ({ children, onPress }) => (
         width: 70,
         height: 70,
         borderRadius: 35,
-        borderWidth: 8,
+        borderWidth: 4,
         borderColor: "#E3E3E3",
         backgroundColor: "#7d0a0a",
       }}
@@ -67,38 +69,89 @@ const UserNavigation = () => {
 
   const MainApp = () => {
     return (
-      <Tab.Navigator screenOptions={{ headerShown: false, tabBarShowLabel: false, style: { ...styles.shadow, position:'absolute', bottom: 25, left: 20, right : 20, elevation: 0, borderRadius: 15, height: 90} }} >
-        <Tab.Screen name='Main' component={Main} options={{ tabBarIcon: ({ focused }) => (
-          <View style={{ alignItems: "center", justifyContent: "center", marginTop:5 }}>
-            <FontAwesome name="home" size={24} color={focused ? "#7D0A0A" : "grey"} />
-            <Text style={{ fontSize: 12, color: focused ? "#7d0a0a" :"grey"}}>Home</Text>
-          </View>
-        )}}/>
-        <Tab.Screen name='tugas' component={Tugas} options={{ tabBarIcon: ({ focused }) => (
-          <View style={{ alignItems: "center", justifyContent: "center", marginTop:5, marginRight:15 }}>
-            <FontAwesome6 name="newspaper" size={24} color={focused ? "#7D0A0A" : "grey"} />
-            <Text style={{ fontSize: 12, color: focused ? "#7d0a0a" :"grey"}} >Course</Text>
-          </View>
-        )}}/>
+      <Tab.Navigator
+        screenOptions={{
+          headerShown: false,
+          tabBarShowLabel: false,
+          style: {
+            ...styles.shadow,
+            position: "absolute",
+            bottom: 25,
+            left: 20,
+            right: 20,
+            elevation: 0,
+            borderRadius: 15,
+            height: 90,
+          },
+        }}
+      >
+        <Tab.Screen
+          name="Main"
+          component={Main}
+          options={{
+            tabBarIcon: ({ focused }) => (
+              <TabBarIcon 
+              iconName="home" 
+              label="Home" 
+              focused={focused} />
+            ),
+          }}
+        />
 
-        <Tab.Screen name="LaporanKeuangan" component={LaporanKeuangan} options={{tabBarIcon: ({focused}) => (
-          <MaterialCommunityIcons name="bank" size={24} color="#E3E3E3" />), 
-          tabBarButton:(props) =>(
-            <CustomTabBarButton {...props}/>
-          )
-          }}/>
-        <Tab.Screen name='news' component={News} options={{ tabBarIcon: ({ focused }) => (
-          <View style={{ alignItems: "center", justifyContent: "center" , marginTop:5, marginLeft:15}}>
-            <Entypo name="news" size={24} color={focused ? "#7D0A0A" : "grey"} />
-            <Text style={{ fontSize: 12, color: focused ? "#7d0a0a" :"grey"}}>News</Text>
-          </View>
-        )}}/>
-        <Tab.Screen name='akun' component={Akun} options={{ tabBarIcon: ({ focused }) => (
-          <View style={{ alignItems: "center", justifyContent: "center" , marginTop:5}}>
-            <MaterialCommunityIcons name="account-circle" size={24} color={focused ? "#7D0A0A" : "grey"} />
-            <Text style={{ fontSize: 12, color: focused ? "#7d0a0a" :"grey"}}>Account</Text>
-          </View>
-        )}}/> 
+        <Tab.Screen
+          name="tugas"
+          component={Tugas}
+          options={{
+            tabBarIcon: ({ focused }) => (
+              <TabBarIcon
+                iconName="newspaper"
+                label="Tugas"
+                focused={focused}
+                additionalStyle={{ marginRight: 15 }}
+              />
+            ),
+          }}
+        />
+
+        <Tab.Screen
+          name="LaporanKeuangan"
+          component={LaporanKeuangan}
+          options={{
+            tabBarIcon: () => (
+              <MaterialCommunityIcons name="bank" size={24} color="#E3E3E3" />
+            ),
+            tabBarButton: (props) => <CustomTabBarButton {...props} />,
+          }}
+        />
+
+        <Tab.Screen
+          name="news"
+          component={News}
+          options={{
+            tabBarIcon: ({ focused }) => (
+              <TabBarIcon
+                iconName="briefcase"
+                label="LeaderBoard"
+                focused={focused}
+                additionalStyle={{ marginLeft: 15 }}
+              />
+            ),
+          }}
+        />
+
+        <Tab.Screen
+          name="akun"
+          component={Akun}
+          options={{
+            tabBarIcon: ({ focused }) => (
+              <TabBarIcon
+                iconName="account-circle"
+                label="Account"
+                focused={focused}
+              />
+            ),
+          }}
+        />
       </Tab.Navigator>
     );
   };
@@ -137,6 +190,7 @@ const UserNavigation = () => {
         <Stack.Screen name="videoAds" component={VideoAds}/>
         <Stack.Screen name="adminPanel" component={AdminPanel}/>
         <Stack.Screen name="detailMateri" component={DetailMateri}/>
+        <Stack.Screen name="detailScore" component={ScoreDetail}/>
         
       </Stack.Navigator>
    

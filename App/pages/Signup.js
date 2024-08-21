@@ -78,7 +78,7 @@ const Signup = () => {
       <ScrollView>
         <StatusBar />
         <KeyboardAvoidingView>
-          <Image source={require('./../assets/signup.png')} style={{ resizeMode: 'cover', height: 350, width: 440 }} />
+          <Image source={require('./../assets/signup.png')} style={{ resizeMode: 'cover', height: 250, width: 340, marginLeft:30 }} />
           <View>
             <Text style={styles.h1}>Create New Account</Text>
             <Text style={styles.h2}>Hi Buddy!! Fill Your Details</Text>
