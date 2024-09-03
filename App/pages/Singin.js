@@ -1,20 +1,33 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity, TextInput, ScrollView, Alert, Pressable } from 'react-native';
+import { 
+  View, 
+  Text, 
+  Image, 
+  TouchableOpacity, 
+  TextInput, 
+  ScrollView, 
+  Alert, 
+  Pressable 
+} from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackHandler } from "react-native";
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
-import { auth, db } from '../../firebase'; // Pastikan db diimpor untuk Firestore
+import { auth, db } from '../../firebase';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
-import { doc, getDoc } from 'firebase/firestore'; // Impor Firestore methods
+import { doc, getDoc } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ScoreDetail from '../etc/Kuis/ScoreDetail';
+import tw from 'twrnc';
 
-export default function Singin() {
+export default function Signin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isRemembered, setIsRemembered] = useState(false);
   const [loading, setLoading] = useState(false);
-  const navigation = useNavigation();
   const [secureTextEntry, setSecureTextEntry] = useState(true);
+  const navigation = useNavigation();
 
   const togglePasswordVisibility = () => {
     setSecureTextEntry(!secureTextEntry);
@@ -22,6 +35,7 @@ export default function Singin() {
 
   useEffect(() => {
     setLoading(true);
+
     const backAction = () => {
       BackHandler.exitApp();
       return true;
@@ -41,11 +55,45 @@ export default function Singin() {
       }
     });
 
+    const loadCredentials = async () => {
+      try {
+        const savedEmail = await AsyncStorage.getItem('userEmail');
+        const savedPassword = await AsyncStorage.getItem('userPassword');
+        if (savedEmail !== null && savedPassword !== null) {
+          setEmail(savedEmail);
+          setPassword(savedPassword);
+          setIsRemembered(true);
+        }
+      } catch (error) {
+        console.log('Failed to load credentials', error);
+      }
+    };
+
+    loadCredentials();
+
     return () => {
       backHandler.remove();
       unsubscribe();
     };
   }, [navigation]);
+
+  const saveCredentials = async (email, password) => {
+    try {
+      await AsyncStorage.setItem('userEmail', email);
+      await AsyncStorage.setItem('userPassword', password);
+    } catch (error) {
+      console.log('Failed to save credentials', error);
+    }
+  };
+
+  const removeCredentials = async () => {
+    try {
+      await AsyncStorage.removeItem('userEmail');
+      await AsyncStorage.removeItem('userPassword');
+    } catch (error) {
+      console.log('Failed to remove credentials', error);
+    }
+  };
 
   const login = async () => {
     if (email === "" || password === "") {
@@ -60,9 +108,13 @@ export default function Singin() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      console.log("user details", user);
 
-      // Fetch user document from Firestore
+      if (isRemembered) {
+        saveCredentials(email, password);
+      } else {
+        removeCredentials();
+      }
+
       const userDocRef = doc(db, "users", user.uid);
       const userDoc = await getDoc(userDocRef);
 
@@ -70,9 +122,8 @@ export default function Singin() {
         const userData = userDoc.data();
         const userRole = userData.role;
 
-        // Check user role and navigate accordingly
         if (userRole === "admin") {
-          navigation.replace("adminPanel"); // Replace with your admin dashboard route
+          navigation.replace("adminPanel");
         } else if (userRole === "user") {
           navigation.replace("MainApp");
         } else {
@@ -107,156 +158,88 @@ export default function Singin() {
       });
   };
 
+  const toggleRememberMe = () => {
+    setIsRemembered(!isRemembered);
+  };
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#ffff" }}>
+    <SafeAreaView style={tw`flex-1 bg-white`}>
       <ScrollView>
         <StatusBar />
-        <Image source={require('./../assets/SignIn.png')} style={{ resizeMode: "cover", height: 300, width: 340, marginLeft:24 }} />
-        <View style={{ alignItems: 'center' }}>
-          <Text style={styles.h1}>Let's Sign In</Text>
-          <Text style={styles.h2}>Hi! Welcome back Buddy, you've been missed</Text>
+        <Image
+          source={require("./../assets/SignUpPage/Rectangle7.png")}
+          style={tw`w-full h-40`}
+          resizeMode="stretch"
+        />
+        <Image
+          source={require("./../assets/SignUpPage/Group108.png")}
+          style={tw`h-20 w-20 self-center mt--10`}
+        />
+        <View style={tw`items-center mt-2`}>
+          <Text style={tw`text-2xl font-bold text-gray-700 mb-6`}>Let's Sign In</Text>
+          <Text style={tw`text-sm text-gray-700`}>Masuk ke Akun Anda</Text>
         </View>
-        <Text
-          style={{
-            fontSize: 13,
-            marginHorizontal: 65,
-            marginTop: 20,
-            marginBottom: -45,
-            fontWeight: "bold",
-          }}
-        >
-          Email
-        </Text>
         <TextInput
-          style={styles.input1}
+          style={tw`mx-12 mt-2 p-2 border border-gray-400 rounded-lg`}
           value={email}
-          placeholder="Your email address"
+          placeholder="Email"
           onChangeText={(text) => setEmail(text)}
           autoFocus
         />
-        <Text
-          style={{
-            fontSize: 13,
-            marginHorizontal: 65,
-            marginTop: 2,
-            marginBottom: -20,
-            fontWeight: "bold",
-          }}
-        >
-          Password
-        </Text>
-        <View style={styles.passwordContainer}>
+        <View style={tw`flex-row items-center mx-12 mt-2 p-2 border border-gray-400 rounded-lg`}>
           <TextInput
-            style={styles.input2}
+            style={tw`flex-1`}
             value={password}
             placeholder="Password"
             secureTextEntry={secureTextEntry}
             onChangeText={(text) => setPassword(text)}
           />
-          <TouchableOpacity onPress={togglePasswordVisibility} style={styles.icon}>
+          <TouchableOpacity
+            onPress={togglePasswordVisibility}
+            style={tw`ml-2 justify-center`}
+          >
             <Ionicons
-              name={secureTextEntry ? 'eye-off' : 'eye'}
-              size={24}
+              name={secureTextEntry ? "eye-off" : "eye"}
+              size={20}
               color="grey"
             />
           </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={login}
-        >
-          <Text style={{ color: "#ffff" }}>Sign In</Text>
+        <View style={tw`flex-row justify-between mx-12 mt-2`}>
+          <View style={tw`flex-row items-center`}>
+            <TouchableOpacity onPress={toggleRememberMe}>
+              <Ionicons
+                name={isRemembered ? "checkbox" : "checkbox-outline"}
+                size={16}
+                color="#BB1624"
+              />
+            </TouchableOpacity>
+            <Text style={tw`ml-2 text-xs text-gray-600`}>Ingat Saya</Text>
+          </View>
+          <TouchableOpacity onPress={resetPassword}>
+            <Text style={tw`text-xs text-blue-600`}>Lupa Password?</Text>
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity style={tw`bg-red-700 h-10 mx-12 mt-8 rounded-full justify-center items-center shadow-lg`} onPress={login}>
+          <Text style={tw`text-white font-bold text-sm`}>Masuk</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={resetPassword} style={styles.forgotButton}>
-          <Text style={styles.forgotText}>Forgot Password?</Text>
-        </TouchableOpacity>
-        <View
-          style={{ flexDirection: "row", marginTop: 5, marginHorizontal: 111 }}
-        >
-          <Text>Don't have an Account? </Text>
-          <Text
-            style={{ textDecorationLine: "underline", color: "blue" }}
-            onPress={() => navigation.navigate("signup")}
-          >
-            Sign Up
+        <View style={tw`items-center mt-2`}>
+          <Text style={tw`text-gray-600 text-xs`}>atau</Text>
+          <Pressable style={tw`flex-row items-center justify-center bg-white border border-gray-400 mt-2 p-2 rounded-lg shadow-lg`} onPress={ScoreDetail}>
+            <Image
+              source={require("./../assets/google-logo.webp")}
+              style={tw`w-4 h-4 mr-2`}
+            />
+            <Text style={tw`text-sm text-gray-700`}>Masuk dengan Google</Text>
+          </Pressable>
+        </View>
+        <View style={tw`flex-row justify-center mt-2`}>
+          <Text style={tw`text-xs`}>Belum punya akun? </Text>
+          <Text style={tw`text-xs text-blue-600`} onPress={() => navigation.navigate("signup")}>
+            Daftar
           </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }
-
-const styles = StyleSheet.create({
-  h1: {
-    fontWeight: 'bold',
-    textAlign: 'center',
-    fontSize: 35,
-    color: '#2F0909',
-  },
-  h2: {
-    marginTop: 1,
-    textAlign: 'center',
-    fontSize: 15,
-    color: 'grey'
-  },
-  texthead: {
-    fontSize: 30,
-    marginTop: 35,
-    textAlign: 'center',
-    fontWeight: 'bold'
-  },
-  othertext: {
-    textAlign: 'center',
-    color: 'grey'
-  },
-  button: {
-    backgroundColor: '#BF3131',
-    padding: 10,
-    marginTop: 30,
-    marginHorizontal: 65,
-    display: 'flex',
-    width: '70%',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 5
-  },
-  input1: {
-    marginHorizontal: 65,
-    marginTop: 50,
-    width: '70%',
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginBottom: 12,
-    paddingLeft: 8,
-    borderRadius: 5,
-  },
-  input2: {
-    flex: 1,
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    paddingLeft: 8,
-    borderRadius: 5,
-  },
-  icon: {
-    marginLeft: 10,
-    justifyContent: 'center',
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 65,
-    marginTop: 25,
-    width: '70%',
-  },
-  forgotButton: {
-    marginTop: 10,
-    alignItems: 'center',
-  },
-  forgotText: {
-    color: 'blue',
-    textDecorationLine: 'underline',
-  },
-});

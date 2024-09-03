@@ -40,7 +40,9 @@ import AdminPanel from "../pages/AdminPanel";
 import DetailMateri from "../etc/DetailMateri";
 import ScoreDetail from "../etc/Kuis/ScoreDetail";
 import TabBarIcon from "../Components/TabBarIcon";
-
+import ProgramList from "../listCourses/ProgramList";
+import KeuanganBisnis from "../listCourses/KeuanganBisnis";
+import KonfirmKeuangan from "../listCourses/confirmClass/KonfirmKeuangan";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -130,8 +132,8 @@ const UserNavigation = () => {
           options={{
             tabBarIcon: ({ focused }) => (
               <TabBarIcon
-                iconName="briefcase"
-                label="LeaderBoard"
+                iconName="trophy"
+                label="LeadBoard"
                 focused={focused}
                 additionalStyle={{ marginLeft: 15 }}
               />
@@ -191,6 +193,9 @@ const UserNavigation = () => {
         <Stack.Screen name="adminPanel" component={AdminPanel}/>
         <Stack.Screen name="detailMateri" component={DetailMateri}/>
         <Stack.Screen name="detailScore" component={ScoreDetail}/>
+        <Stack.Screen name="programList" component={ProgramList}/>
+        <Stack.Screen name="keuanganProgram" component={KeuanganBisnis}/>
+        <Stack.Screen name="confirmkeuanganProgram" component={KonfirmKeuangan}/>
         
       </Stack.Navigator>
    

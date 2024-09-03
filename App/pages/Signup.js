@@ -1,12 +1,23 @@
-import { View, Text, Image, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, Pressable, KeyboardAvoidingView } from 'react-native';
+import { 
+  View, 
+  Text, 
+  Image, 
+  TextInput, 
+TouchableOpacity, 
+  ScrollView, 
+  Alert, 
+  Pressable, 
+  KeyboardAvoidingView 
+} from 'react-native';
 import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import { auth, db } from '../../firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from 'react-native-vector-icons';
+import tw from 'twrnc';
 
 const Signup = () => {
   const [email, setEmail] = useState('');
@@ -20,36 +31,12 @@ const Signup = () => {
     setSecureTextEntry(!secureTextEntry);
   };
 
-
   const register = async () => {
     if (fullname === "" || email === "" || password === "" || phoneNumber === "") {
-      Alert.alert(
-        "Invalid Details",
-        "Please fill all the details",
-        [
-          {
-            text: "Cancel",
-            onPress: () => console.log("Cancel Pressed"),
-            style: "cancel",
-          },
-          { text: "OK", onPress: () => console.log("OK Pressed") },
-        ],
-        { cancelable: false }
-      );
+      Alert.alert("Invalid Details", "Please fill all the details");
     } else {
       if (password.length < 6) {
-        Alert.alert(
-          "Invalid Password",
-          "Password should be at least 6 characters long",
-          [
-            {
-              text: "OK",
-              onPress: () => console.log("OK Pressed"),
-              style: "cancel",
-            },
-          ],
-          { cancelable: false }
-        );
+        Alert.alert("Invalid Password", "Password should be at least 6 characters long");
       } else {
         try {
           const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -73,183 +60,142 @@ const Signup = () => {
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      const result = await Google.logInAsync({
+        androidClientId: '<YOUR_ANDROID_CLIENT_ID>',
+        iosClientId: '<YOUR_IOS_CLIENT_ID>',
+        scopes: ['profile', 'email'],
+      });
+
+      if (result.type === 'success') {
+        const { idToken, accessToken } = result;
+        const credential = GoogleAuthProvider.credential(idToken, accessToken);
+        const userCredential = await signInWithCredential(auth, credential);
+        const user = userCredential.user;
+        
+        if (userCredential.additionalUserInfo.isNewUser) {
+          await setDoc(doc(db, 'users', user.uid), {
+            fullname: user.displayName,
+            email: user.email,
+            phoneNumber: user.phoneNumber || '',
+            role: 'user',
+          });
+        }
+
+        navigation.replace('MainApp');
+      } else {
+        return { cancelled: true };
+      }
+    } catch (error) {
+      Alert.alert("Google Sign-In Error", error.message);
+    }
+  };
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#ffff" }}>
-      <ScrollView>
+    <SafeAreaView style={tw`flex-1 bg-white`}>
+      <ScrollView contentContainerStyle={tw`flex-grow`}>
         <StatusBar />
-        <KeyboardAvoidingView>
-          <Image source={require('./../assets/signup.png')} style={{ resizeMode: 'cover', height: 250, width: 340, marginLeft:30 }} />
-          <View>
-            <Text style={styles.h1}>Create New Account</Text>
-            <Text style={styles.h2}>Hi Buddy!! Fill Your Details</Text>
-          </View>
-          <Text
-            style={{
-              fontSize: 13,
-              marginHorizontal: 65,
-              marginTop: 20,
-              marginBottom: -45,
-              fontWeight: "bold",
-            }}
-          >
-            Fullname
-          </Text>
-          <TextInput
-            style={styles.input1}
-            placeholder="Gloria Mairani"
-            onChangeText={(text) => setFullname(text)} autoFocus
-          />
-          <Text
-            style={{
-              fontSize: 13,
-              marginHorizontal: 65,
-              marginTop: 2,
-              marginBottom: -45,
-              fontWeight: "bold",
-            }}
-          >
-            Email
-          </Text>
-          <TextInput
-            style={styles.input1}
-            placeholder="example@gmail.com"
-            onChangeText={(text) => setEmail(text)}
-          />
-          <Text
-            style={{
-              fontSize: 13,
-              marginHorizontal: 65,
-              marginTop: 2,
-              marginBottom: -45,
-              fontWeight: "bold",
-            }}
-          >
-            Phone Number
-          </Text>
-          <TextInput
-            style={styles.input1}
-            placeholder="+62821808080"
-            onChangeText={(text) => setPhoneNumber(text)}
-          />
-          <Text
-            style={{
-              fontSize: 13,
-              marginHorizontal: 65,
-              marginTop: 2,
-              marginBottom: -20,
-              fontWeight: "bold",
-            }}
-          >
-            Password
-          </Text>
-          <View style={styles.passwordContainer}>
-          <TextInput
-            style={styles.input2}
-            placeholder="*******"
-            secureTextEntry={secureTextEntry}
-            onChangeText={(text) => setPassword(text)}
-          />
-          <TouchableOpacity onPress={togglePasswordVisibility} style={styles.icon}>
-            <Ionicons
-              name={secureTextEntry ? 'eye-off' : 'eye'}
-              size={24}
-              color="grey"
+        <KeyboardAvoidingView style={tw`flex-1`}>
+          <View style={tw`absolute top-0 left-0 right-0`}>
+            <Image
+              source={require("./../assets/SignUpPage/Rectangle7.png")}
+              style={tw`w-full h-40`} 
+              resizeMode="stretch"
             />
-          </TouchableOpacity>
           </View>
-          <Pressable
-            style={styles.button}
-            onPress={register}
-          >
-            <Text style={{ color: "#ffff" }}>Sign Up</Text>
-          </Pressable>
-          <View style={{ flexDirection: "row", marginTop: 5, marginHorizontal: 111 }}>
-            <Text>Already Have Account?</Text>
-            <Text style={{ textDecorationLine: "underline", color: "blue" }}
-              onPress={() => navigation.navigate("signin")}>Sign In</Text>
+          <View style={tw`mt-40`}>
+            <Image
+              source={require("./../assets/SignUpPage/Group108.png")}
+              style={tw`h-20 w-20 self-center -mt-16`} 
+            />
+            <View>
+              <Text style={tw`text-center text-2xl text-gray-700 mb-6`}>
+                Sign Up
+              </Text>
+            </View>
+
+            <Text style={tw`text-sm text-gray-700 ml-12 mb-2`}>
+              Daftar akun Anda
+            </Text>
+
+            <TextInput
+              style={tw`mx-12 mt-1 mb-2 p-2 border border-gray-400 rounded-lg`}
+              placeholder="Nama Lengkap"
+              onChangeText={(text) => setFullname(text)}
+              autoFocus
+            />
+
+            <TextInput
+              style={tw`mx-12 mt-1 mb-2 p-2 border border-gray-400 rounded-lg`}
+              placeholder="Alamat Email"
+              onChangeText={(text) => setEmail(text)}
+            />
+
+            <TextInput
+              style={tw`mx-12 mt-1 mb-2 p-2 border border-gray-400 rounded-lg`}
+              placeholder="Nomor Handphone"
+              onChangeText={(text) => setPhoneNumber(text)}
+            />
+
+            <View
+              style={tw`flex-row mx-12 mt-1 mb-2 p-2 border border-gray-400 rounded-lg`}
+            >
+              <TextInput
+                style={tw`flex-1`}
+                placeholder="Password"
+                secureTextEntry={secureTextEntry}
+                onChangeText={(text) => setPassword(text)}
+              />
+              <TouchableOpacity
+                onPress={togglePasswordVisibility}
+                style={tw`self-center`}
+              >
+                <Ionicons
+                  name={secureTextEntry ? "eye-off" : "eye"}
+                  size={20} 
+                  color="darkgrey"
+                />
+              </TouchableOpacity>
+            </View>
+
+            <Pressable
+              style={tw`bg-red-700 p-3 mx-12 my-2 rounded-full shadow-lg`}
+              onPress={register}
+            >
+              <Text style={tw`text-white text-center text-sm`}>Daftar</Text> 
+            </Pressable>
+
+            <View>
+              <Text style={tw`text-center text-gray-600 my-2 text-xs`}>atau</Text> 
+              <Pressable
+                style={tw`flex-row items-center justify-center bg-white border border-gray-400 p-2 mx-20 rounded-xl shadow-lg`} // Ukuran tombol dan padding dikurangi
+                onPress={signInWithGoogle}
+              >
+                <Image
+                  source={require("./../assets/google-logo.webp")}
+                  style={tw`w-4 h-4 mr-2`} 
+                />
+                <Text style={tw`text-gray-700 text-sm`}>
+                  Masuk dengan Google
+                </Text>
+              </Pressable>
+            </View>
+
+            <View style={tw`flex-row justify-center my-4`}>
+              <Text style={tw`text-xs`}>Sudah punya akun?</Text> 
+              <Text
+                style={tw`text-blue-700 ml-1 text-xs`} 
+                onPress={() => navigation.navigate("signin")}
+              >
+                Masuk
+              </Text>
+            </View>
           </View>
         </KeyboardAvoidingView>
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }
 
 export default Signup;
-
-const styles = StyleSheet.create({
-  h1: {
-    fontWeight: 'bold',
-    textAlign: 'center',
-    fontSize: 25,
-    color: '#2F0909',
-  },
-  h2: {
-    marginTop: 1,
-    textAlign: 'center',
-    fontSize: 15,
-    color: 'grey'
-  },
-  button: {
-    backgroundColor: '#BF3131',
-    padding: 12,
-    marginTop: 130,
-    marginHorizontal: 70,
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 30
-  },
-  othertext: {
-    textAlign: 'center',
-    color: 'grey'
-  },
-  button: {
-    backgroundColor: '#BF3131',
-    padding: 10,
-    marginTop: 20,
-    marginHorizontal: 65,
-    display: 'flex',
-    width: '70%',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 5
-  },
-  input1: {
-    marginHorizontal: 65,
-    marginTop: 50,
-    width: '70%',
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginBottom: 12,
-    paddingLeft: 8,
-    borderRadius: 5,
-    // borderTopLeftRadius: 15,
-    // borderTopRightRadius: 0
-  },
-  input2: {
-    marginHorizontal: 65,
-    marginTop: 25,
-    width: '70%',
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginBottom: 12,
-    paddingLeft: 8,
-    borderRadius: 5,
-  },
-  icon: {
-    marginLeft: -35,
-    justifyContent: 'center',
-    marginTop: 10
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    // alignItems: 'center',
-    // marginHorizontal: 65,
-    marginTop: 1,
-    width: '80%',
-  },
-});

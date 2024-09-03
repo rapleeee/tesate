@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { auth, db } from '../../firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import tw from 'twrnc';  // Import twrnc for Tailwind styling
 
 export default function Akun() {
   const navigation = useNavigation();
@@ -112,7 +113,12 @@ export default function Akun() {
       >
         {/* Header dan informasi pengguna */}
         <StatusBar />
-        <View style={styles.headerContainer}>
+        <View>
+          <Image
+            source={require("./../assets/AkunPage/Promotion.png")}
+            style={tw`w-full h-50 mb-15`}
+            resizeMode="stretch"
+          />
           <TouchableOpacity
             onPress={() => navigation.navigate("settings")}
             style={styles.settingsIcon}
@@ -125,30 +131,36 @@ export default function Akun() {
           <Image source={require("./../assets/Logo.png")} style={styles.logo} />
         </View>
         <Text style={styles.fullName}>{fullname}</Text>
-        <Text style={styles.umkm}>bodanana</Text>
+        <Text style={styles.umkm}>Kopi Konco</Text>
         <View style={styles.classContainer}>
           <Text style={styles.classText}>Elite Ambasador</Text>
         </View>
 
         {/* Progress items dalam dua kolom */}
-        <View style={styles.progressContainer}>
+        <View
+          style={tw`flex-row flex-wrap justify-between bg-[#F2F2F2] p-4 rounded-lg mx-2 border border-gray-300`}
+        >
           {progressItems.map((item, index) => (
-            <TouchableOpacity 
-              key={index} 
-              style={styles.progressItem}
+            <TouchableOpacity
+              key={index}
+              style={tw`w-1/2 p-2`} // Menentukan ukuran lebar elemen untuk membuatnya responsif
               onPress={() => {
                 if (item.screen) {
-                  navigation.navigate(item.screen); // Navigate to the specified screen
+                  navigation.navigate(item.screen); // Navigasi ke layar yang ditentukan
                 }
               }}
             >
-              <View style={styles.progressItemContent}>
-                <View style={styles.iconProgresBase}>
+              <View style={tw`flex-row items-center`}>
+                <View
+                  style={tw`bg-[#BB1624] w-12 h-12 rounded-full flex items-center justify-center mr-3`}
+                >
                   <Ionicons name={item.icon} size={25} color="white" />
                 </View>
-                <View style={styles.textContainer}>
-                  <Text style={styles.scoreText}>{item.value}</Text>
-                  <Text style={styles.progressText}>{item.text}</Text>
+                <View>
+                  <Text style={tw`text-lg font-bold text-black`}>
+                    {item.value}
+                  </Text>
+                  <Text style={tw`text-sm text-gray-500`}>{item.text}</Text>
                 </View>
               </View>
             </TouchableOpacity>
@@ -157,20 +169,28 @@ export default function Akun() {
 
         {/* card expired subscription */}
 
-        <View style={styles.subcribtionContainer}>
+        <View style={tw`bg-[#F2F2F2] rounded-lg p-4 mx-2 relative mt-10 border border-gray-300`}>
+          {/* Kontainer Utama */}
           <View>
-          
-            <Text style={{fontSize:24, fontWeight:'bold'}}>Starter</Text>
-            <Text>Subcription expire on <Text style={{color:'blue'}}>01 May 2024</Text></Text>
-          </View>
-        </View>
-        <View style={{backgroundColor:'darkred', padding:5, marginTop:-125, marginLeft:30, width:'30%', borderRadius:30}}>
-            <Text style={{color:'white', textAlign:'center'}}>Current Plan</Text>
+            <Text style={tw`text-xl font-bold`}>Starter</Text>
+            <Text style={tw`text-base`}>
+              Subscription expire on{" "}
+              <Text style={tw`text-blue-500`}>01 May 2024</Text>
+            </Text>
           </View>
 
+          {/* Label Current Plan */}
+          <View
+            style={tw`bg-[#BB1624] px-3 py-1 rounded-full absolute -top-3 left-4`}
+          >
+            <Text style={tw`text-white text-center text-sm`}>Current Plan</Text>
+          </View>
+        </View>
+
         {/* Tombol Logout */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
+        
+        <TouchableOpacity style={tw`bg-[#BB1624] h-10 mx-12 mt-8 rounded-full justify-center items-center shadow-lg`} onPress={handleLogout}>
+          <Text style={tw`text-white font-bold text-sm`}>Logout</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -186,7 +206,7 @@ const styles = StyleSheet.create({
   },
   settingsIcon: {
     position: 'absolute',
-    top: 21,
+    top: 40, // Adjusted so it's not hidden by the image
     right: 20,
   },
   userInfoContainer: {
@@ -218,7 +238,7 @@ const styles = StyleSheet.create({
   },
   classText: {
     padding: 10,
-    backgroundColor: 'orange',
+    backgroundColor: '#EF980C',
     width: '50%',
     textAlign: 'center',
     color: 'white',
@@ -229,92 +249,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4.65,
     elevation: 8,
   },
-  container: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  scoreText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    textAlign: 'left',
-  },
-  progressContainer: {
-    backgroundColor: '#F0F0F4',
-    borderRadius: 20,
-    width: '95%',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    marginLeft:10,
-    shadowColor: '#000', // Warna bayangan hitam
-    shadowOffset: { width: 0, height: 4 }, // Posisi bayangan (ke bawah)
-    shadowOpacity: 0.3, // Transparansi bayangan
-    shadowRadius: 4.65, // Radius bayangan
-    elevation: 8,
-  },
-  progressItem: {
-    flexDirection: 'column',
-    alignItems: 'left',
-    width: '45%',
-    marginBottom: -5,
-    marginTop:10,
-    marginLeft:15,
-  },
-  progressItemContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  textContainer: {
-    flexDirection: 'column',
-    marginLeft: 5,
-    marginBottom: 5,
-  },
-  iconProgresBase: {
-    backgroundColor: 'darkred',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
-    marginLeft: 10
-  },
-  progressText: {
-    fontSize: 12,
-    color: '#787879',
-    textAlign: 'left',
-  },
-  subcribtionContainer:{
-    backgroundColor: '#FFFFFD',
-    marginTop: 25,
-    borderRadius: 20,
-    width: '95%',
-    padding: 30,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    marginLeft:10,
-    shadowColor: '#000', // Warna bayangan hitam
-    shadowOffset: { width: 0, height: 4 }, // Posisi bayangan (ke bawah)
-    shadowOpacity: 0.3, // Transparansi bayangan
-    shadowRadius: 4.65, // Radius bayangan
-    elevation: 8,
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    backgroundColor: 'darkred',
-    width: 150,
-    padding: 10,
-    borderRadius: 30,
-    marginLeft: 130,
-    marginTop: 150,
-    justifyContent: 'center',
-  },
-  logoutText: {
-    fontWeight: 'bold',
-    color: 'white',
-  },
+ 
+  
 });

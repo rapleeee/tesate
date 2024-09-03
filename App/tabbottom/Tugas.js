@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, Image, TouchableOpacity } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -6,15 +6,13 @@ import { AntDesign } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { db } from '../../firebase';
 import { collection, getDocs } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import tw from 'twrnc';
 
 export default function Tugas() {
   const [materials, setMaterials] = useState([]);
   const navigation = useNavigation();
-  const [isChecked, setChecked] = useState({
-    1: false,
-    2: false,
-    3: false,
-  });
+  const [isChecked, setChecked] = useState({});
 
   useEffect(() => {
     const fetchMaterials = async () => {
@@ -22,123 +20,97 @@ export default function Tugas() {
       const materialsList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setMaterials(materialsList);
     };
+
+    const loadCheckedState = async () => {
+      try {
+        const savedCheckedState = await AsyncStorage.getItem('checkedState');
+        if (savedCheckedState) {
+          setChecked(JSON.parse(savedCheckedState));
+        }
+      } catch (e) {
+        console.error('Failed to load checkbox state.', e);
+      }
+    };
+
     fetchMaterials();
+    loadCheckedState();
   }, []);
 
-  const handleCheckboxPress = (id) => {
-    setChecked((prevState) => ({
-      ...prevState,
-      [id]: !prevState[id],
-    }));
+  const handleCheckboxPress = async (id) => {
+    const updatedCheckedState = {
+      ...isChecked,
+      [id]: !isChecked[id],
+    };
+    setChecked(updatedCheckedState);
+
+    try {
+      await AsyncStorage.setItem('checkedState', JSON.stringify(updatedCheckedState));
+    } catch (e) {
+      console.error('Failed to save checkbox state.', e);
+    }
   };
 
   return (
-    <SafeAreaView>
+    <SafeAreaView style={tw`flex-1 bg-white`}>
       <ScrollView>
         <StatusBar />
-        <View>
+        <View style={tw`p-5`}>
           <Image
             source={require("./../assets/Logo.png")}
-            style={{ height: 30, width: 30, margin: 20 }}
+            style={tw`h-8 w-8 mb-5`}
           />
         </View>
-        <View>
-          <Text style={styles.text}>Materi Edukasi</Text>
-          <AntDesign
-            name="exclamationcircleo"
-            size={17}
-            color="#7D0A0A"
-            style={{ marginTop: -18, marginHorizontal: 120 }}
-            onPress={() => navigation.navigate("edu")}
-          />
-          <Text style={styles.text1}>
+        <View style={tw`px-5 mb-5`}>
+          <View style={tw`flex-row items-center justify-between`}>
+            <Text style={tw`text-lg text-red-700 font-medium`}>Program Kredit Usaha</Text>
+            <AntDesign
+              name="exclamationcircleo"
+              size={17}
+              color="#7D0A0A"
+              onPress={() => navigation.navigate("edu")}
+            />
+          </View>
+          <Text style={tw`text-base text-gray-800 font-light mt-2`}>
             Yuk selesaiin materi edukasinya biar makin pinter!
           </Text>
         </View>
         
         {/* Existing materials */}
-        <View style={styles.cardMateri}>
-          <Text onPress={() => navigation.navigate("Keuangan")}>Materi Laporan Keuangan</Text>
-          <View>
-            <TouchableOpacity onPress={() => handleCheckboxPress(1)}>
-              <View style={styles.checkbox}>
-                <AntDesign name={isChecked[1] && "checksquare"} size={22} color="#7d0a0a" style={{ marginTop: -1 }}/>
-              </View>
+        {[
+          { id: 1, title: 'Materi Laporan Keuangan', route: 'Keuangan' },
+          { id: 2, title: 'Sosial Media Branding', route: 'sosmed' },
+          { id: 3, title: 'Ads/Iklan', route: 'ads' },
+        ].map(material => (
+          <View key={material.id} style={tw`flex-row items-center justify-between p-4 bg-white mx-5 mb-4 rounded-lg border border-gray-300`}>
+            <Text style={tw`text-gray-700`} onPress={() => navigation.navigate(material.route)}>
+              {material.title}
+            </Text>
+            <TouchableOpacity onPress={() => handleCheckboxPress(material.id)}>
+              <AntDesign
+                name={isChecked[material.id] ? "checksquare" : "checksquareo"}
+                size={22}
+                color="#7d0a0a"
+              />
             </TouchableOpacity>
           </View>
-        </View>
-        <View style={styles.cardMateri}>
-          <Text onPress={() => navigation.navigate("sosmed")}>Sosial Media Branding</Text>
-          <View>
-            <TouchableOpacity onPress={() => handleCheckboxPress(2)}>
-              <View style={styles.checkbox}>
-                <AntDesign name={isChecked[2] && "checksquare"} size={22} color="#7d0a0a" style={{ marginTop: -1 }}/>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
-        
-        <View style={styles.cardMateri}>
-          <Text onPress={() => navigation.navigate("ads")}>Ads/Iklan</Text>
-          <View>
-            <TouchableOpacity onPress={() => handleCheckboxPress(3)}>
-              <View style={styles.checkbox}>
-                <AntDesign name={isChecked[3] && "checksquare"} size={22} color="#7d0a0a" style={{ marginTop: -1 }}/>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
-        
+        ))}
+
         {/* New materials from Firestore */}
         {materials.map(material => (
-          <View key={material.id} style={styles.cardMateri}>
-            <Text onPress={() => navigation.navigate("detailMateri", { material })}>{material.title}</Text>
-            {/* <Text>{material.subTitle}</Text> */}
-            <View>
-              <TouchableOpacity onPress={() => handleCheckboxPress(material.id)}>
-                <View style={styles.checkbox}>
-                  <AntDesign name={isChecked[material.id] && "checksquare"} size={22} color="#7d0a0a" style={{ marginTop: -1 }}/>
-                </View>
-              </TouchableOpacity>
-            </View>
+          <View key={material.id} style={tw`flex-row items-center justify-between p-4 bg-white mx-5 mb-4 rounded-lg border border-gray-300`}>
+            <Text style={tw`text-gray-700`} onPress={() => navigation.navigate("detailMateri", { material })}>
+              {material.title}
+            </Text>
+            <TouchableOpacity onPress={() => handleCheckboxPress(material.id)}>
+              <AntDesign
+                name={isChecked[material.id] ? "checksquare" : "checksquareo"}
+                size={22}
+                color="#7d0a0a"
+              />
+            </TouchableOpacity>
           </View>
         ))}
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  text:{
-    marginLeft:20,
-    color:'#7D0A0A',
-    marginTop:-15,
-    fontWeight:'500'
-  },
-  text1:{
-    marginLeft:20,
-    color:'#111',
-    fontWeight:'300',
-    marginBottom:30
-  },
-  cardMateri:{
-    padding:10,
-    backgroundColor:'transparent',
-    margin:20,
-    marginTop:-10,
-    borderRadius:5,
-    borderWidth:1,
-    borderColor:'grey',
-  },
-  checkbox:{
-    height: 24,
-    width: 24,
-    borderRadius: 1,
-    borderWidth: 1,
-    borderColor: "#7d0a0a",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop:-20,
-    marginHorizontal:335
-  }
-});
