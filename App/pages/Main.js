@@ -170,10 +170,38 @@ const MainApp = () => {
         </View>
 
         <Text style={tw`font-bold mx-5 mt-5`}>On Going Program</Text>
-        <Image
-          source={require("./../assets/homePage/Group109.png")}
-          style={tw`ml-5 mt-2.5`}
-        />
+        <View style={tw`relative mt-2`}>
+          <Image
+            source={require("../assets/homePage/cardd.png")}
+            style={tw`w-11/12 h-40 ml-auto mr-auto`} 
+            resizeMode="stretch" 
+          />
+
+          <View style={tw`absolute top-0 left-0 right-0 bottom-0 p-4`}>
+            <View style={tw`flex-row items-center justify-between px-5`}>
+              <Image
+                source={require("../assets/coursesPage/undraw_online_learning.png")}
+                style={tw`w-30 h-30`} 
+                resizeMode="contain"
+              />
+              <View style={tw`flex-1 ml-4`}>
+                <Text style={tw`text-xl text-white`}>
+                  Introduction of Venture Capital
+                </Text>
+                <Text style={tw`text-white text-xs mt-2`}>4 Modules</Text>
+                <View style={tw`mt-2`}>
+                  <Text style={tw`text-white text-base`}>Complete 15%</Text>
+                  <View style={tw`w-full h-2 bg-gray-300 rounded-full mt-1`}>
+                    <View
+                      style={tw`h-full bg-black rounded-full`}
+                      width="15%"
+                    />
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
 
         <View style={tw`flex-row justify-between items-center mx-5 mt-5`}>
           <Text style={tw`font-bold `}>Pilih Program</Text>
@@ -254,7 +282,7 @@ const MainApp = () => {
           <Text
             style={tw`text-[#BB1624] text-sm`}
             onPress={() => {
-              navigation.navigate("programList");
+              navigation.navigate("myCourses");
             }}
           >
             See All
@@ -262,7 +290,7 @@ const MainApp = () => {
         </View>
 
         {/* Card untuk Program Saya */}
-        <View style={tw`flex-row flex-wrap justify-between px-5 mt-3`}>
+        <View style={tw`flex-row flex-wrap justify-between px-5 mt-3 mb-10`}>
           <View
             style={tw`bg-white rounded-lg border border-gray-400 h-[90px] w-[30%] mb-4 shadow-md`}
           >

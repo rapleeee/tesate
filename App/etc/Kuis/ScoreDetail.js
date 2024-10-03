@@ -8,6 +8,7 @@ import tw from 'twrnc';
 
 const ScoreDetail = () => {
   const [scores, setScores] = useState(null);
+  const [timeSpent, setTimeSpent] = useState(null); 
   const [loading, setLoading] = useState(true);
   const auth = getAuth();
   const user = auth.currentUser;
@@ -22,7 +23,9 @@ const ScoreDetail = () => {
         if (userDoc.exists()) {
           const userData = userDoc.data();
           const userScores = userData.scores ? userData.scores : null;
+          const userTimeSpent = userData.timeSpent ? userData.timeSpent : null;
           setScores(userScores);
+          setTimeSpent(userTimeSpent);
         } else {
           console.log('No such document!');
         }
@@ -51,9 +54,16 @@ const ScoreDetail = () => {
         <Text style={tw`text-2xl mb-4`}>Score Details</Text>
         {scores ? (
           Object.keys(scores).map((quizId) => (
-            <Text key={quizId} style={tw`text-lg`}>
-              {quizId}: {scores[quizId]}
-            </Text>
+            <View key={quizId} style={tw`mb-4`}>
+              <Text style={tw`text-lg`}>
+                {quizId}: {scores[quizId]} 
+              </Text>
+              {timeSpent && timeSpent[quizId] && ( 
+                <Text style={tw`text-sm`}>
+                  Time Spent: {Math.floor(timeSpent[quizId] / 60)} minutes {timeSpent[quizId] % 60} seconds
+                </Text>
+              )}
+            </View>
           ))
         ) : (
           <Text style={tw`text-lg`}>No scores available.</Text>

@@ -1,58 +1,142 @@
-import { ScrollView, StyleSheet, Text, View, TouchableOpacity } from "react-native";
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { ScrollView, Text, View, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
+import tw from "twrnc";
+import { db } from "./../../firebase"; // import firebase setup
+import { collection, onSnapshot } from "firebase/firestore";
+
+// Fungsi untuk menghitung total skor atau rata-rata skor pengguna
+const calculateTotalScore = (scores) => {
+  // Jika totalScores ada, kembalikan totalScores
+  if (scores.totalScore !== null && scores.totalScore !== undefined) {
+    return scores.totalScore;
+  }
+
+  // Jika tidak ada totalScore, hitung dari objek skor yang diberikan
+  const totalScores = Object.values(scores).reduce((acc, score) => acc + score, 0);
+
+  // Hitung jumlah skor yang ada
+  const numberOfScores = Object.values(scores).length;
+
+  // Pastikan tidak ada pembagian dengan 0 dan kembalikan hasil total skor
+  return numberOfScores > 0 ? Math.floor(totalScores / numberOfScores) : 0;
+};
 
 const News = () => {
+  const [users, setUsers] = useState([]);
+  const [countdown, setCountdown] = useState(3600); // 1 hour countdown (3600 seconds)
+
+  // Mengambil data pengguna dari Firebase Firestore
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "users"), (snapshot) => {
+      const userList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setUsers(userList);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Countdown timer untuk hitungan mundur
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown((prevCountdown) => (prevCountdown > 0 ? prevCountdown - 1 : 3600));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Format waktu countdown ke format HH:MM:SS
+  const formatTime = (timeInSeconds) => {
+    const hours = Math.floor(timeInSeconds / 3600);
+    const minutes = Math.floor((timeInSeconds % 3600) / 60);
+    const seconds = timeInSeconds % 60;
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
+  // Urutkan pengguna berdasarkan total skor tertinggi ke terendah
+  const sortedUsers = users
+    .map((user) => ({
+      ...user,
+      totalScore: calculateTotalScore(user.scores),
+    }))
+    .sort((a, b) => b.totalScore - a.totalScore);
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+    <SafeAreaView style={tw`flex-1 bg-white`}>
       <ScrollView>
         <StatusBar />
-        
+
         {/* Header */}
-        <View style={styles.header}>
+        <View style={tw`flex-row items-center justify-between px-4 py-3 bg-white shadow`}>
           <TouchableOpacity>
             <Ionicons name="arrow-back" size={24} color="#787879" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Leaderboard</Text>
+          <Text style={tw`text-lg text-gray-600`}>Leaderboard</Text>
           <TouchableOpacity>
             <Ionicons name="alert-circle-outline" size={24} color="#BB1624" />
           </TouchableOpacity>
         </View>
 
-        {/* Content */}
-        <View style={styles.contentContainer}>
-          <View style={styles.card}>
-            <Ionicons name="trophy-outline" size={100} color="#fff" style={styles.trophyIcon}/>
-            <Text style={styles.cardTitle}>Ambassador Elite</Text>
+        {/* Konten */}
+        <View style={tw`items-center px-4 py-5`}>
+          {/* Card Section */}
+          <View style={tw`w-4/5 bg-yellow-600 rounded-xl p-5 items-center mb-5`}>
+            <Ionicons name="trophy-outline" size={100} color="#fff" style={tw`mb-2`} />
+            <Text style={tw`text-lg text-white`}>Ambassador Elite</Text>
           </View>
-          <View style={styles.countdownContainer}>
+
+          {/* Countdown Section */}
+          <Text style={tw`text-gray-600 mb-2`}>Settlement Countdown:</Text>
+          <View style={tw`flex-row items-center mb-5`}>
             <Ionicons name="timer-outline" size={24} color="#E91E63" />
-            <Text style={styles.countdownText}>20:14:00</Text>
+            <Text style={tw`ml-2 text-lg text-pink-600`}>{formatTime(countdown)}</Text>
           </View>
 
           {/* Tabs */}
-          <View style={styles.tabContainer}>
-            <TouchableOpacity style={styles.tabActive}>
-              <Text style={styles.tabTextActive}>Ranking</Text>
+          <View style={tw`flex-row mb-5`}>
+            <TouchableOpacity style={tw`flex-1 bg-[#BF3131] p-3 rounded-l-xl items-center`}>
+              <Text style={tw`text-white font-bold`}>Ranking</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.tabInactive}>
-              <Text style={styles.tabTextInactive}>Global</Text>
+            <TouchableOpacity style={tw`flex-1 bg-gray-200 p-3 rounded-r-xl items-center`}>
+              <Text style={tw`text-gray-600 font-bold`}>Global</Text>
             </TouchableOpacity>
           </View>
 
           {/* Ranking List */}
-          <View style={styles.rankingContainer}>
-            {/* List Item */}
-            {["Venus", "Gloria", "Phoebe"].map((name, index) => (
-              <View key={index} style={styles.rankingItem}>
-                <View style={styles.rankBadge}>
-                  <Text style={styles.rankBadgeText}>{index + 1}</Text>
+          <View style={tw`w-full`}>
+            {/* Ranking Header */}
+            <View style={tw`flex-row justify-between px-2 py-2 bg-red-200 rounded-t-xl`}>
+              <Text style={tw`text-gray-800 font-bold flex-1`}>Ranking</Text>
+              <Text style={tw`text-gray-800 font-bold flex-1 text-center`}>Name</Text>
+              <Text style={tw`text-gray-800 font-bold flex-1 text-center`}>Point</Text>
+              <Text style={tw`text-gray-800 font-bold flex-1 text-right`}>Reward</Text>
+            </View>
+
+            {/* Daftar Pengguna */}
+            {sortedUsers.map((user, index) => (
+              <View key={index} style={tw`flex-row items-center bg-red-500 p-3 rounded-xl mb-2 justify-between`}>
+                {/* Ranking */}
+                <View style={tw`w-7 h-7 bg-yellow-300 rounded-full items-center justify-center`}>
+                  <Text style={tw`text-sm font-bold`}>{index + 1}</Text>
                 </View>
-                <Text style={styles.nameText}>{name}</Text>
-                <Text style={styles.pointText}>1875</Text>
-                <View style={styles.rewardBox} />
+
+                {/* Nama Pengguna */}
+                <Text style={tw`flex-1 ml-3 text-base text-white`}>{user.fullname}</Text>
+
+                {/* Total atau Rata-rata Skor */}
+                <Text style={tw`flex-1 text-base font-bold text-white text-center`}>
+                  {user.totalScore}
+                </Text>
+
+                {/* Placeholder untuk Reward */}
+                <View style={tw`w-10 h-10 bg-white border border-yellow-500 rounded-md`} />
               </View>
             ))}
           </View>
@@ -63,117 +147,3 @@ const News = () => {
 };
 
 export default News;
-
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: '#fff',
-    elevation: 2,
-  },
-  headerTitle: {
-    fontSize: 18,
-    color: '#787879',
-  },
-  contentContainer: {
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#fff',
-  },
-  card: {
-    width: '80%',
-    backgroundColor: '#EF980C',
-    borderRadius: 10,
-    padding: 20,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  trophyIcon: {
-    marginBottom: 10,
-  },
-  cardTitle: {
-    fontSize: 18,
-    color: '#fff',
-  },
-  countdownContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  countdownText: {
-    marginLeft: 8,
-    fontSize: 18,
-    color: '#E91E63',
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    marginBottom: 20,
-  },
-  tabActive: {
-    flex: 1,
-    padding: 10,
-    backgroundColor: '#BF3131',
-    alignItems: 'center',
-    borderRadius: 10,
-  },
-  tabInactive: {
-    flex: 1,
-    padding: 10,
-    backgroundColor: '#ECECEC',
-    alignItems: 'center',
-    borderTopRightRadius: 10,
-    borderBottomRightRadius: 10,
-  },
-  tabTextActive: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  tabTextInactive: {
-    color: '#787879',
-    fontWeight: 'bold',
-  },
-  rankingContainer: {
-    width: '100%',
-  },
-  rankingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFC107',
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 10,
-    justifyContent: 'space-between',
-  },
-  rankBadge: {
-    width: 30,
-    height: 30,
-    backgroundColor: '#FFEB3B',
-    borderRadius: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rankBadgeText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  nameText: {
-    flex: 1,
-    marginLeft: 10,
-    fontSize: 16,
-  },
-  pointText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  rewardBox: {
-    width: 40,
-    height: 40,
-    backgroundColor: '#fff',
-    borderColor: '#FFC107',
-    borderWidth: 1,
-    borderRadius: 5,
-  },
-});

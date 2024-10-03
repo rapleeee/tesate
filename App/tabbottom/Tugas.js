@@ -1,116 +1,120 @@
-import { View, Text, ScrollView, Image, TouchableOpacity } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
-import { AntDesign } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { db } from '../../firebase';
-import { collection, getDocs } from 'firebase/firestore';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native'; // Untuk navigasi back
 import tw from 'twrnc';
+import Icon from 'react-native-vector-icons/Ionicons'; // Menggunakan ikon back dari Ionicons
 
-export default function Tugas() {
-  const [materials, setMaterials] = useState([]);
-  const navigation = useNavigation();
-  const [isChecked, setChecked] = useState({});
-
-  useEffect(() => {
-    const fetchMaterials = async () => {
-      const querySnapshot = await getDocs(collection(db, 'materials'));
-      const materialsList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setMaterials(materialsList);
-    };
-
-    const loadCheckedState = async () => {
-      try {
-        const savedCheckedState = await AsyncStorage.getItem('checkedState');
-        if (savedCheckedState) {
-          setChecked(JSON.parse(savedCheckedState));
-        }
-      } catch (e) {
-        console.error('Failed to load checkbox state.', e);
-      }
-    };
-
-    fetchMaterials();
-    loadCheckedState();
-  }, []);
-
-  const handleCheckboxPress = async (id) => {
-    const updatedCheckedState = {
-      ...isChecked,
-      [id]: !isChecked[id],
-    };
-    setChecked(updatedCheckedState);
-
-    try {
-      await AsyncStorage.setItem('checkedState', JSON.stringify(updatedCheckedState));
-    } catch (e) {
-      console.error('Failed to save checkbox state.', e);
-    }
-  };
+const Tugas = () => {
+  const navigation = useNavigation(); // Hook untuk navigasi back
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-white`}>
+    <SafeAreaView style={tw`bg-white`}>
       <ScrollView>
-        <StatusBar />
-        <View style={tw`p-5`}>
-          <Image
-            source={require("./../assets/Logo.png")}
-            style={tw`h-8 w-8 mb-5`}
-          />
-        </View>
-        <View style={tw`px-5 mb-5`}>
-          <View style={tw`flex-row items-center justify-between`}>
-            <Text style={tw`text-lg text-red-700 font-medium`}>Program Kredit Usaha</Text>
-            <AntDesign
-              name="exclamationcircleo"
-              size={17}
-              color="#7D0A0A"
-              onPress={() => navigation.navigate("edu")}
-            />
-          </View>
-          <Text style={tw`text-base text-gray-800 font-light mt-2`}>
-            Yuk selesaiin materi edukasinya biar makin pinter!
-          </Text>
-        </View>
         
-        {/* Existing materials */}
-        {[
-          { id: 1, title: 'Materi Laporan Keuangan', route: 'Keuangan' },
-          { id: 2, title: 'Sosial Media Branding', route: 'sosmed' },
-          { id: 3, title: 'Ads/Iklan', route: 'ads' },
-        ].map(material => (
-          <View key={material.id} style={tw`flex-row items-center justify-between p-4 bg-white mx-5 mb-4 rounded-lg border border-gray-300`}>
-            <Text style={tw`text-gray-700`} onPress={() => navigation.navigate(material.route)}>
-              {material.title}
-            </Text>
-            <TouchableOpacity onPress={() => handleCheckboxPress(material.id)}>
-              <AntDesign
-                name={isChecked[material.id] ? "checksquare" : "checksquareo"}
-                size={22}
-                color="#7d0a0a"
-              />
-            </TouchableOpacity>
-          </View>
-        ))}
+        
 
-        {/* New materials from Firestore */}
-        {materials.map(material => (
-          <View key={material.id} style={tw`flex-row items-center justify-between p-4 bg-white mx-5 mb-4 rounded-lg border border-gray-300`}>
-            <Text style={tw`text-gray-700`} onPress={() => navigation.navigate("detailMateri", { material })}>
-              {material.title}
-            </Text>
-            <TouchableOpacity onPress={() => handleCheckboxPress(material.id)}>
-              <AntDesign
-                name={isChecked[material.id] ? "checksquare" : "checksquareo"}
-                size={22}
-                color="#7d0a0a"
+        <View style={tw`relative mt-4`}>
+        
+          <Image
+            source={require('./../assets/AkunPage/Promotion.png')} // Sesuaikan dengan path gambar Promotion
+            style={tw`w-full h-50 mb-15`}
+            resizeMode="stretch"
+          />
+         <TouchableOpacity onPress={() => navigation.goBack()} style={tw`p-2`}>
+            <Icon name="chevron-back" size={30} color="#000" />
+          </TouchableOpacity>
+          <View style={tw`absolute w-full items-center top-10`}>
+            <Text style={tw`text-white text-lg`}>Current Coins</Text>
+            <Text style={tw`text-white text-4xl font-bold mt-2`}>200</Text>
+            <Image
+              source={require('./../assets/tugasPage/coin.png')}
+              style={tw`w-10 h-10 mt-2`}
+            />
+            <TouchableOpacity style={tw`bg-yellow-400 rounded-full py-2 px-4 mt-4`}>
+              <Text style={tw`text-yellow-900 font-bold`}>Ambassador Elite</Text>
+            </TouchableOpacity>
+            <Text style={tw`text-black mt-2`}>Ikuti tantangan dan dapatkan hadiahnya!</Text>
+          </View>
+        </View>
+
+        {/* Task Sections */}
+        <View  style={tw`flex-1 p-4`}>
+          {/* Daily Task */}
+          <View style={tw`bg-gray-200 p-4 rounded-lg flex-row justify-between items-center`}>
+            <View style={tw`flex-row items-center`}>
+              <Text style={tw`text-lg font-bold`}>Daily Task</Text>
+              <Text style={tw`ml-2 text-blue-600`}>XP 50</Text>
+              <Image
+                source={require('./../assets/tugasPage/coin.png')}
+                style={tw`ml-2 w-6 h-6`}
               />
+            </View>
+            <Text style={tw`text-lg text-green-500`}>Done</Text>
+          </View>
+
+          {/* Weekly Task */}
+          <View style={tw`bg-gray-200 p-4 rounded-lg flex-row justify-between items-center mt-4`}>
+            <View style={tw`flex-row items-center`}>
+              <Text style={tw`text-lg font-bold`}>Weekly Task</Text>
+              <Text style={tw`ml-2 text-blue-600`}>XP 125</Text>
+              <Image
+                source={require('./../assets/tugasPage/coin.png')}
+                style={tw`ml-2 w-6 h-6`}
+              />
+            </View>
+            <TouchableOpacity style={tw`bg-red-600 rounded-full py-2 px-4`}>
+              <Text style={tw`text-white text-lg`}>Start</Text>
             </TouchableOpacity>
           </View>
-        ))}
+
+          {/* Progress Bar */}
+          <View style={tw`bg-gray-300 h-2 mt-2 rounded-full`}>
+            <View style={tw`bg-red-600 h-full w-2/3 rounded-full`}></View>
+          </View>
+          <View style={tw`mt-6`}>
+          {/* New Year Event */}
+          <View style={tw`bg-blue-100 p-4 rounded-lg flex-row justify-between items-center`}>
+            <View style={tw`flex-row items-center`}>
+              <Text style={tw`text-lg font-bold`}>New Year</Text>
+              <Text style={tw`ml-2 text-green-500`}>25</Text>
+              <Image
+                source={require('./../assets/tugasPage/coin.png')}
+                style={tw`ml-2 w-6 h-6`}
+              />
+            </View>
+          </View>
+
+          {/* Progress Bar */}
+          <View style={tw`bg-gray-300 h-2 mt-2 rounded-full`}>
+            <View style={tw`bg-blue-600 h-full w-1/6 rounded-full`}></View>
+          </View>
+
+          {/* Ambassador Elite Event */}
+          <View style={tw`bg-yellow-200 p-4 rounded-lg flex-row justify-between items-center mt-4`}>
+            <View style={tw`flex-row items-center`}>
+              <Text style={tw`text-lg font-bold`}>Ambassador Elite</Text>
+              <Text style={tw`ml-2 text-green-500`}>1000</Text>
+              <Image
+                source={require('./../assets/tugasPage/coin.png')}
+                style={tw`ml-2 w-6 h-6`}
+              />
+            </View>
+          </View>
+
+          {/* Progress Bar */}
+          <View style={tw`bg-gray-300 h-2 mt-2 rounded-full`}>
+            <View style={tw`bg-yellow-600 h-full w-1/12 rounded-full`}></View>
+          </View>
+        </View>
+        </View>
+
+        {/* Special Event Sections */}
+        
+
       </ScrollView>
     </SafeAreaView>
   );
-}
+};
+
+export default Tugas;

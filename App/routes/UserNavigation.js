@@ -1,12 +1,8 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { FontAwesome } from '@expo/vector-icons';
-import { FontAwesome6 } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Entypo } from '@expo/vector-icons';
 
 import Start from '../pages/Start';
 import Signup from '../pages/Signup';
@@ -43,6 +39,11 @@ import TabBarIcon from "../Components/TabBarIcon";
 import ProgramList from "../listCourses/ProgramList";
 import KeuanganBisnis from "../listCourses/KeuanganBisnis";
 import KonfirmKeuangan from "../listCourses/confirmClass/KonfirmKeuangan";
+import BusinessSurvey from "../etc/bisnisSurvey/BusinessSurvey";
+import InvestasiUsaha from "../listCourses/InvestasiUsaha";
+import ProgramSaya from "../listCourses/myCourses/ProgramSaya";
+import VentureCapital from "../listCourses/myCourses/module/VentureCapital";
+import VideoMateriKeuanganII from "../etc/Materi/SubabMateri/Keuangan/VideoMateriKeuanganII";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -92,22 +93,19 @@ const UserNavigation = () => {
           component={Main}
           options={{
             tabBarIcon: ({ focused }) => (
-              <TabBarIcon 
-              iconName="home" 
-              label="Home" 
-              focused={focused} />
+              <TabBarIcon iconName="home" label="Home" focused={focused} />
             ),
           }}
         />
 
         <Tab.Screen
-          name="tugas"
-          component={Tugas}
+          name="myCourses"
+          component={ProgramSaya}
           options={{
             tabBarIcon: ({ focused }) => (
               <TabBarIcon
                 iconName="newspaper"
-                label="Tugas"
+                label="myCourse"
                 focused={focused}
                 additionalStyle={{ marginRight: 15 }}
               />
@@ -125,18 +123,37 @@ const UserNavigation = () => {
             tabBarButton: (props) => <CustomTabBarButton {...props} />,
           }}
         />
-
         <Tab.Screen
-          name="news"
-          component={News}
+          name="tugas"
+          component={Tugas}
           options={{
             tabBarIcon: ({ focused }) => (
-              <TabBarIcon
-                iconName="trophy"
-                label="LeadBoard"
-                focused={focused}
-                additionalStyle={{ marginLeft: 15 }}
-              />
+              <View style={{ alignItems: "center", justifyContent: "center" }}>
+                <Image
+                  source={require("../assets/homePage/Vector.png")} // Ganti dengan path gambar yang benar
+                  style={[
+                    {
+                      width: 20, // Atur ukuran lebar icon
+                      height: 20, // Atur ukuran tinggi icon
+                    },
+                    focused
+                      ? { tintColor: "#7d0a0a" } // Warna ketika focus
+                      : { tintColor: "#767776F0" }, // Warna ketika tidak focus
+                  ]}
+                  resizeMode="contain" // Agar gambar tetap dalam proporsi
+                />
+                <Text
+                  style={[
+                    {
+                      fontSize: 12, // Ukuran teks
+                      marginTop: 2, // Jarak antara gambar dan teks
+                      color: focused ? "#7d0a0a" : "#767776F0", // Warna ketika focus dan tidak focus
+                    },
+                  ]}
+                >
+                  Tantangan
+                </Text>
+              </View>
             ),
           }}
         />
@@ -196,6 +213,11 @@ const UserNavigation = () => {
         <Stack.Screen name="programList" component={ProgramList}/>
         <Stack.Screen name="keuanganProgram" component={KeuanganBisnis}/>
         <Stack.Screen name="confirmkeuanganProgram" component={KonfirmKeuangan}/>
+        <Stack.Screen name="bisnisSurvey" component={BusinessSurvey}/>
+        <Stack.Screen name="investasiProgram" component={InvestasiUsaha}/>
+        <Stack.Screen name="myCourses" component={ProgramSaya}/>
+        <Stack.Screen name="ventureCapital" component={VentureCapital}/>
+        <Stack.Screen name="videoKeuanganII" component={VideoMateriKeuanganII}/>
         
       </Stack.Navigator>
    

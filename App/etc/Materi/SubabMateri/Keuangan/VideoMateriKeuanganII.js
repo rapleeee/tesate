@@ -4,20 +4,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Video } from 'expo-av';
 import tw from 'twrnc';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native'; 
+import { useNavigation } from '@react-navigation/native';
 
-const VideoMateriKeuangan = () => {
+const VideoMateriKeuanganII = () => {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [selectedPart, setSelectedPart] = useState(null); 
-  const navigation = useNavigation();
-
+  const [selectedPart, setSelectedPart] = useState(null);
+  const navigation = useNavigation(); 
 
   const seekToTime = async (timeInSeconds, part) => {
     if (videoRef.current) {
       try {
         await videoRef.current.setPositionAsync(timeInSeconds * 1000);
-        setSelectedPart(part); // Set bagian yang dipilih
+        setSelectedPart(part); 
       } catch (error) {
         console.error('Error seeking video:', error);
       }
@@ -45,9 +44,9 @@ const VideoMateriKeuangan = () => {
           <Ionicons name="arrow-back" size={24} color="gray" />
         </TouchableOpacity>
 
-        <Text style={tw`text-lg font-bold mb-2`}>Lesson 1</Text>
+        <Text style={tw`text-lg font-bold mb-2`}>Lesson 2</Text>
         <Text style={[tw`text-base font-bold mb-5`, { color: '#BB1624' }]}>
-          Identifying the Need: Market Research Essentials
+            Building a Solid Business Model Canvas
         </Text>
 
         <View style={tw`w-full h-50 mb-5`}>
@@ -95,8 +94,9 @@ const VideoMateriKeuangan = () => {
             <Text style={{ color: selectedPart === 'conclusion' ? '#BB1624' : 'gray' }}>5:07</Text>
           </View>
         </View>
+
         <TouchableOpacity
-          onPress={() => navigation.navigate('videoKeuanganII')}
+          onPress={() => console.log('Next Lesson')}
           style={tw`bg-gray-500 rounded-lg p-4 items-center`}
         >
           <Text style={tw`text-white text-base`}>Next Lesson</Text>
@@ -106,4 +106,4 @@ const VideoMateriKeuangan = () => {
   );
 };
 
-export default VideoMateriKeuangan;
+export default VideoMateriKeuanganII;

@@ -3,7 +3,7 @@
 import * as firebase from 'firebase/app';
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, collection, onSnapshot } from "firebase/firestore";
 
 const firebaseConfig = {
     apiKey: "AIzaSyB4nmjfywBq2dH-ZKHgnr-neFRfQYFELDU",

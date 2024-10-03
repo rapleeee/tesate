@@ -139,24 +139,5 @@ export const reactQuestions = [
         ],
         correctAnswer: "Arus kas operasional, arus kas investasi, arus kas pendanaan",
     },
-    {
-        question: "Apa yang termasuk dalam laporan laba rugi?",
-        options: [
-            "Aset, kewajiban, dan ekuitas",
-            "Pendapatan, beban, dan laba atau rugi bersih",
-            "Aliran kas masuk dan keluar",
-            "Perubahan dalam ekuitas pemilik"
-        ],
-        correctAnswer: "Pendapatan, beban, dan laba atau rugi bersih",
-    },
-    {
-        question: "Mengapa laporan keuangan penting bagi investor?",
-        options: [
-            "Karena membantu mereka menentukan harga produk",
-            "Karena memberikan informasi tentang kesehatan keuangan dan kelayakan kredit bisnis",
-            "Karena membantu dalam menentukan lokasi bisnis baru",
-            "Karena memastikan transparansi dalam operasi bisnis"
-        ],
-        correctAnswer: "Karena memberikan informasi tentang kesehatan keuangan dan kelayakan kredit bisnis",
-    }
+  
 ];

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View, TouchableOpacity, SafeAreaView, ScrollView, Image, Alert } from 'react-native';
+import { Text, View, TouchableOpacity, SafeAreaView, ScrollView, Image, Alert, TextInput, Modal } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import tw from 'twrnc';
@@ -11,10 +11,15 @@ import * as ImagePicker from 'expo-image-picker'; // Import Image Picker
 export default function Settings() {
   const navigation = useNavigation();
   const [fullname, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [user, setUser] = useState(null);
   const [userUID, setUserUID] = useState('');
   const [userEmail, setUserEmail] = useState('');
-  const [profileImage, setProfileImage] = useState(null); // State untuk menyimpan gambar profil
+  const [profileImage, setProfileImage] = useState(null); 
+  const [modalVisible, setModalVisible] = useState(false); 
+  const [businessName, setBusinessName] = useState('');
+
 
   const loadUserData = async (uid) => {
     try {
@@ -32,7 +37,9 @@ export default function Settings() {
     if (userData) {
       setUserEmail(userData.email);
       setFullName(userData.fullname);
-      setProfileImage(userData.profileImage); 
+      setPhoneNumber(userData.phoneNumber || ''); 
+      setProfileImage(userData.profileImage);
+      setBusinessName(userData.businessName);
     }
   };
 
@@ -44,7 +51,6 @@ export default function Settings() {
       return;
     }
 
-    // Memilih gambar
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -53,8 +59,8 @@ export default function Settings() {
     });
 
     if (!result.canceled) {
-      setProfileImage(result.assets[0].uri); 
-      await uploadImage(result.assets[0].uri); 
+      setProfileImage(result.assets[0].uri);
+      await uploadImage(result.assets[0].uri);
     }
   };
 
@@ -62,12 +68,12 @@ export default function Settings() {
     const storage = getStorage();
     const response = await fetch(uri);
     const blob = await response.blob();
-    const storageRef = ref(storage, `profile_pictures/${userUID}`);
+    const storageRef = ref(storage, `profile_pictures/${userUID}`); 
 
     try {
       await uploadBytes(storageRef, blob);
       const downloadURL = await getDownloadURL(storageRef);
-      await updateProfileImage(downloadURL); 
+      await updateProfileImage(downloadURL);
     } catch (error) {
       console.error("Error uploading image: ", error);
       Alert.alert("Error", "Failed to upload image.");
@@ -81,6 +87,18 @@ export default function Settings() {
       Alert.alert("Success", "Profile picture updated successfully!");
     } catch (error) {
       console.error("Error updating profile image in Firestore: ", error);
+    }
+  };
+
+  const updateUserDetails = async () => {
+    try {
+      const userDocRef = doc(db, 'users', userUID);
+      await updateDoc(userDocRef, { fullname, email, phoneNumber });
+      Alert.alert("Success", "Profile details updated successfully!");
+      setModalVisible(false); 
+    } catch (error) {
+      console.error("Error updating user details in Firestore: ", error);
+      Alert.alert("Error", "Failed to update profile details.");
     }
   };
 
@@ -106,6 +124,8 @@ export default function Settings() {
     }, [userUID])
   );
 
+  
+
   return (
     <SafeAreaView style={tw`flex-1 bg-white`}>
       <ScrollView>
@@ -120,14 +140,14 @@ export default function Settings() {
             <TouchableOpacity onPress={pickImage}>
               <Image
                 source={profileImage ? { uri: profileImage } : require('./../../assets/AkunPage/Promotion2.png')}
-                style={tw`w-16 h-16 rounded-full border-4 border-white`}
+                style={tw`w-16 h-16 rounded-full border-4 border-[#EF980C]`}
               />
             </TouchableOpacity>
 
             <View style={tw`ml-4`}>
               <Text style={tw`text-white text-lg font-bold`}>{fullname}</Text>
-              <Text style={tw`text-white text-sm mb-2`}>Kopi Konco</Text>
-              <TouchableOpacity>
+              <Text style={tw`text-white text-sm mb-2`}>{businessName}</Text>
+              <TouchableOpacity onPress={() => setModalVisible(true)}>
                 <Text style={tw`text-white font-semibold`}>Ubah</Text>
               </TouchableOpacity>
             </View>
@@ -136,7 +156,7 @@ export default function Settings() {
 
         <View style={tw`p-4`}>
           <Text style={tw`text-red-500 font-bold mb-2`}>Akun</Text>
-          <OptionItem text="Detail Bisnis" onPress={() => {}} />
+          <OptionItem text="Detail Bisnis" onPress={() => navigation.navigate('bisnisSurvey')} />
           <OptionItem text="Change Password" onPress={() => navigation.navigate('ChangePassword')} />
           <OptionItem text="Lorem Ipsum" onPress={() => {}} />
 
@@ -156,6 +176,43 @@ export default function Settings() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Edit User Details Modal */}
+      <Modal visible={modalVisible} animationType="slide">
+        <View style={tw`flex-1 justify-center items-center bg-white p-6`}>
+          <Text style={tw`text-lg font-bold mb-4`}>Edit Your Details</Text>
+          <TextInput
+            style={tw`border border-gray-400 w-full p-2 rounded mb-4`}
+            placeholder="Full Name"
+            value={fullname}
+            onChangeText={setFullName}
+          />
+          <TextInput
+            style={tw`border border-gray-400 w-full p-2 rounded mb-4`}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <TextInput
+            style={tw`border border-gray-400 w-full p-2 rounded mb-4`}
+            placeholder="Phone Number"
+            value={phoneNumber}
+            onChangeText={setPhoneNumber}
+          />
+          <TouchableOpacity
+            style={tw`bg-blue-500 rounded p-2 w-full mt-2`}
+            onPress={updateUserDetails}
+          >
+            <Text style={tw`text-white text-center`}>Save</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={tw`bg-gray-500 rounded p-2 w-full mt-2`}
+            onPress={() => setModalVisible(false)}
+          >
+            <Text style={tw`text-white text-center`}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
