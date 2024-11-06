@@ -1,29 +1,33 @@
-import { 
-  View, 
-  Text, 
-  Image, 
-  TextInput, 
-TouchableOpacity, 
-  ScrollView, 
-  Alert, 
-  Pressable, 
-  KeyboardAvoidingView 
-} from 'react-native';
-import React, { useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
-import { useNavigation } from '@react-navigation/native';
-import { auth, db } from '../../firebase';
-import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
-import { Ionicons } from 'react-native-vector-icons';
-import tw from 'twrnc';
+import {
+  View,
+  Text,
+  Image,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  Pressable,
+  KeyboardAvoidingView,
+} from "react-native";
+import React, { useState } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
+import { useNavigation } from "@react-navigation/native";
+import { auth, db } from "../../firebase";
+import {
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithCredential,
+} from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { Ionicons } from "react-native-vector-icons";
+import tw from "twrnc";
 
 const Signup = () => {
-  const [email, setEmail] = useState('');
-  const [fullname, setFullname] = useState('');
-  const [password, setPassword] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [email, setEmail] = useState("");
+  const [fullname, setFullname] = useState("");
+  const [password, setPassword] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const navigation = useNavigation();
   const [secureTextEntry, setSecureTextEntry] = useState(true);
 
@@ -32,14 +36,26 @@ const Signup = () => {
   };
 
   const register = async () => {
-    if (fullname === "" || email === "" || password === "" || phoneNumber === "") {
+    if (
+      fullname === "" ||
+      email === "" ||
+      password === "" ||
+      phoneNumber === ""
+    ) {
       Alert.alert("Invalid Details", "Please fill all the details");
     } else {
       if (password.length < 6) {
-        Alert.alert("Invalid Password", "Password should be at least 6 characters long");
+        Alert.alert(
+          "Invalid Password",
+          "Password should be at least 6 characters long"
+        );
       } else {
         try {
-          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const userCredential = await createUserWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
           const user = userCredential.user;
           const myUserUid = user.uid;
 
@@ -48,7 +64,7 @@ const Signup = () => {
             email: email,
             phoneNumber: phoneNumber,
             scores: {},
-            role: 'user'
+            role: "user",
           });
 
           console.log("User data saved successfully");
@@ -63,27 +79,27 @@ const Signup = () => {
   const signInWithGoogle = async () => {
     try {
       const result = await Google.logInAsync({
-        androidClientId: '<YOUR_ANDROID_CLIENT_ID>',
-        iosClientId: '<YOUR_IOS_CLIENT_ID>',
-        scopes: ['profile', 'email'],
+        androidClientId: "<YOUR_ANDROID_CLIENT_ID>",
+        iosClientId: "<YOUR_IOS_CLIENT_ID>",
+        scopes: ["profile", "email"],
       });
 
-      if (result.type === 'success') {
+      if (result.type === "success") {
         const { idToken, accessToken } = result;
         const credential = GoogleAuthProvider.credential(idToken, accessToken);
         const userCredential = await signInWithCredential(auth, credential);
         const user = userCredential.user;
-        
+
         if (userCredential.additionalUserInfo.isNewUser) {
-          await setDoc(doc(db, 'users', user.uid), {
+          await setDoc(doc(db, "users", user.uid), {
             fullname: user.displayName,
             email: user.email,
-            phoneNumber: user.phoneNumber || '',
-            role: 'user',
+            phoneNumber: user.phoneNumber || "",
+            role: "user",
           });
         }
 
-        navigation.replace('MainApp');
+        navigation.replace("MainApp");
       } else {
         return { cancelled: true };
       }
@@ -97,17 +113,11 @@ const Signup = () => {
       <ScrollView contentContainerStyle={tw`flex-grow`}>
         <StatusBar />
         <KeyboardAvoidingView style={tw`flex-1`}>
-          <View style={tw`absolute top-0 left-0 right-0`}>
-            <Image
-              source={require("./../assets/SignUpPage/Rectangle7.png")}
-              style={tw`w-full h-40`} 
-              resizeMode="stretch"
-            />
-          </View>
+          <View style={tw`absolute top-0 left-0 right-0`}></View>
           <View style={tw`mt-40`}>
             <Image
               source={require("./../assets/SignUpPage/Group108.png")}
-              style={tw`h-20 w-20 self-center -mt-16`} 
+              style={tw`h-20 w-20 self-center -mt-16`}
             />
             <View>
               <Text style={tw`text-center text-2xl text-gray-700 mb-6`}>
@@ -153,7 +163,7 @@ const Signup = () => {
               >
                 <Ionicons
                   name={secureTextEntry ? "eye-off" : "eye"}
-                  size={20} 
+                  size={20}
                   color="darkgrey"
                 />
               </TouchableOpacity>
@@ -163,29 +173,37 @@ const Signup = () => {
               style={tw`bg-red-700 p-3 mx-12 my-2 rounded-full shadow-lg`}
               onPress={register}
             >
-              <Text style={tw`text-white text-center text-sm`}>Daftar</Text> 
+              <Text style={tw`text-white text-center text-sm`}>Daftar</Text>
             </Pressable>
 
-            <View>
-              <Text style={tw`text-center text-gray-600 my-2 text-xs`}>atau</Text> 
+            <View style={tw`flex-col flex items-center justify-center`}>
+              <Text style={tw`text-center text-gray-600 my-2 text-xs`}>
+                atau
+              </Text>
               <Pressable
-                style={tw`flex-row items-center justify-center bg-white border border-gray-400 p-2 mx-20 rounded-xl shadow-lg`} // Ukuran tombol dan padding dikurangi
-                onPress={signInWithGoogle}
+                style={tw`flex-row items-center justify-center bg-white border border-gray-400 mt-2 p-2 w-70 rounded-lg shadow-lg`} onPress={signInWithGoogle}
               >
                 <Image
                   source={require("./../assets/google-logo.webp")}
-                  style={tw`w-4 h-4 mr-2`} 
+                  style={tw`w-4 h-4 mr-2`}
                 />
-                <Text style={tw`text-gray-700 text-sm`}>
+                <Text style={tw`text-sm text-gray-700`}>
                   Masuk dengan Google
                 </Text>
               </Pressable>
+              <Pressable style={tw`flex-row items-center justify-center bg-white border border-gray-400 mt-2 p-2 w-70 rounded-lg shadow-lg`} onPress={signInWithGoogle}>
+            <Image
+              source={require("./../assets/LoginPage/fb.png")}
+              style={tw`w-4 h-4 mr-2`}
+            />
+            <Text style={tw`text-sm text-gray-700`}>Masuk dengan Facebook</Text>
+          </Pressable>
             </View>
 
             <View style={tw`flex-row justify-center my-4`}>
-              <Text style={tw`text-xs`}>Sudah punya akun?</Text> 
+              <Text style={tw`text-xs`}>Sudah punya akun?</Text>
               <Text
-                style={tw`text-blue-700 ml-1 text-xs`} 
+                style={tw`text-blue-700 ml-1 text-xs`}
                 onPress={() => navigation.navigate("signin")}
               >
                 Masuk
@@ -196,6 +214,6 @@ const Signup = () => {
       </ScrollView>
     </SafeAreaView>
   );
-}
+};
 
 export default Signup;

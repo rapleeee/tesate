@@ -7,21 +7,22 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
 export default function BusinessSurvey() {
   const navigation = useNavigation();
-  const [step, setStep] = useState(1); 
+  const [step, setStep] = useState(0);
   const [businessName, setBusinessName] = useState('');
   const [businessField, setBusinessField] = useState('');
   const [businessChallenge, setBusinessChallenge] = useState('');
   const [educationTopics, setEducationTopics] = useState([]);
-  const [financialSkill, setFinancialSkill] = useState(''); 
-  const [profileImage, setProfileImage] = useState(null); 
+  const [financialSkill, setFinancialSkill] = useState('');
+  const [profileImage, setProfileImage] = useState(null);
   const [userUID, setUserUID] = useState('');
+  const [fullname, setFullname] = useState('');
   const [hasSurvey, setHasSurvey] = useState(false);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         setUserUID(user.uid);
-        fetchUserData(user.uid); 
+        fetchUserData(user.uid);
       }
     });
     return () => unsubscribe();
@@ -33,8 +34,14 @@ export default function BusinessSurvey() {
       const userDoc = await getDoc(userDocRef);
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        setProfileImage(userData.profileImage); 
-        setHasSurvey(!!userData.businessName); 
+        setProfileImage(userData.profileImage);
+        setFullname(userData.fullname || '');
+        setHasSurvey(userData.hasCompletedSurvey || false);
+
+        if (userData.hasCompletedSurvey) {
+          navigation.navigate('MainApp');
+        }
+
         if (userData.businessName) {
           setBusinessName(userData.businessName);
           setBusinessField(userData.businessField);
@@ -70,7 +77,7 @@ export default function BusinessSurvey() {
       return;
     }
     if (step < 5) {
-      setStep(step + 1); 
+      setStep(step + 1);
     } else {
       saveSurveyData();
     }
@@ -78,9 +85,9 @@ export default function BusinessSurvey() {
 
   const handleEducationTopicSelect = (topic) => {
     if (educationTopics.includes(topic)) {
-      setEducationTopics(educationTopics.filter((t) => t !== topic)); 
+      setEducationTopics(educationTopics.filter((t) => t !== topic));
     } else if (educationTopics.length < 3) {
-      setEducationTopics([...educationTopics, topic]); 
+      setEducationTopics([...educationTopics, topic]);
     } else {
       Alert.alert("Error", "Anda hanya bisa memilih 3 topik edukasi.");
     }
@@ -95,83 +102,44 @@ export default function BusinessSurvey() {
         businessChallenge,
         educationTopics,
         financialSkill,
+        hasCompletedSurvey: true,
       });
       Alert.alert("Success", "Survey completed!");
-      setHasSurvey(true); 
+      setHasSurvey(true);
+      navigation.navigate("MainApp");
     } catch (error) {
       console.error("Error saving survey data: ", error);
       Alert.alert("Error", "Failed to save survey data.");
     }
   };
 
-  const handleRetakeSurvey = () => {
-    setBusinessName('');
-    setBusinessField('');
-    setBusinessChallenge('');
-    setEducationTopics([]);
-    setFinancialSkill('');
-    setStep(1);
-    setHasSurvey(false);
-  };
-
   if (hasSurvey) {
-    // Tampilkan detail bisnis jika survei sudah diisi
     return (
       <SafeAreaView style={tw`flex-1 bg-white`}>
-          <Image
-            source={require("./../../assets/SignUpPage/Rectangle7.png")}
-            style={tw`w-full h-40`}
-            resizeMode="stretch"
-          />
-          <Image
-            source={require("./../../assets/LoginPage/Logo.png")}
-            style={tw`h-25 w-25 self-center mt--10`}
-          />
+        <Image source={require("./../../assets/LoginPage/Logo.png")} style={tw`h-25 w-25 self-center mt-10`} />
         <ScrollView contentContainerStyle={tw`p-6`}>
           <Text style={tw`text-2xl font-bold mt-4 text-[#BB1624] text-center`}>
             Detail Bisnis Anda
           </Text>
-
           <View style={tw`bg-[#FFFFFF] w-full p-4 mt-6 rounded-xl shadow-lg`}>
             <Text style={tw`text-lg font-semibold mb-2`}>Nama Bisnis:</Text>
             <Text style={tw`text-base text-gray-700`}>{businessName}</Text>
-
             <Text style={tw`text-lg font-semibold mt-4 mb-2`}>Bidang:</Text>
             <Text style={tw`text-base text-gray-700`}>{businessField}</Text>
-
             <Text style={tw`text-lg font-semibold mt-4 mb-2`}>Tantangan:</Text>
             <Text style={tw`text-base text-gray-700`}>{businessChallenge}</Text>
-
-            <Text style={tw`text-lg font-semibold mt-4 mb-2`}>
-              Topik Edukasi:
-            </Text>
-            <Text style={tw`text-base text-gray-700`}>
-              {educationTopics.join(", ")}
-            </Text>
-
-            <Text style={tw`text-lg font-semibold mt-4 mb-2`}>
-              Kemampuan Finansial:
-            </Text>
+            <Text style={tw`text-lg font-semibold mt-4 mb-2`}>Topik Edukasi:</Text>
+            <Text style={tw`text-base text-gray-700`}>{educationTopics.join(", ")}</Text>
+            <Text style={tw`text-lg font-semibold mt-4 mb-2`}>Kemampuan Finansial:</Text>
             <Text style={tw`text-base text-gray-700`}>{financialSkill}</Text>
           </View>
 
           <View style={tw`flex-row justify-between w-full mt-6`}>
-            <TouchableOpacity
-              style={tw`flex-1 bg-[#BB1624] py-3 px-6 rounded-full mr-2`}
-              onPress={handleRetakeSurvey}
-            >
-              <Text style={tw`text-white text-center font-bold`}>
-                Isi Survey Kembali
-              </Text>
+            <TouchableOpacity style={tw`flex-1 bg-[#BB1624] py-3 px-6 rounded-full mr-2`} onPress={() => setStep(1)}>
+              <Text style={tw`text-white text-center font-bold`}>Isi Survey Kembali</Text>
             </TouchableOpacity>
-
-            <TouchableOpacity
-              style={tw`flex-1 bg-gray-500 py-3 px-6 rounded-full ml-2`}
-              onPress={() => navigation.navigate("MainApp")}
-            >
-              <Text style={tw`text-white text-center font-bold`}>
-                Ke Settings
-              </Text>
+            <TouchableOpacity style={tw`flex-1 bg-gray-500 py-3 px-6 rounded-full ml-2`} onPress={() => navigation.navigate("MainApp")}>
+              <Text style={tw`text-white text-center font-bold`}>Ke Settings</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -181,47 +149,35 @@ export default function BusinessSurvey() {
 
   return (
     <SafeAreaView style={tw`flex-1 bg-white`}>
-      <Image
-          source={require("./../../assets/SignUpPage/Rectangle7.png")}
-          style={tw`w-full h-40`}
-          resizeMode="stretch"
-        />
-        <Image
-          source={require("./../../assets/LoginPage/Logo.png")}
-          style={tw`h-25 w-25 self-center mt--10`}
-        />
-      <ScrollView
-        contentContainerStyle={tw`flex-1 justify-center items-center p-6`}
-        >
-        <View style={tw`items-center mb-6`}>
-          <Image
-            source={
-              profileImage
-                ? { uri: profileImage }
-                : require("./../../assets/AkunPage/Promotion.png")
-            }
-            style={tw`w-24 h-24 rounded-full border-4 border-[#EF980C]`}
-          />
-          <Text style={tw`text-2xl font-bold mt-4`}>
-            Selamat datang di Saraya,
-          </Text>
-          <Text style={tw`text-center text-gray-600 mt-2`}>
-            Mari kita mulai untuk mempersiapkan konten pilihan sesuai dengan
-            kebutuhan kamu!
-          </Text>
-        </View>
-
-        {step === 1 && (
-          <View style={tw`w-full`}>
-            <Text style={tw`text-lg mb-2 font-bold`}>Nama Bisnis</Text>
-            <TextInput
-              style={tw`border border-gray-300 rounded-lg p-2 mb-4`}
-              placeholder="Masukkan nama bisnis Anda"
-              value={businessName}
-              onChangeText={setBusinessName}
-            />
+      <Image source={require("./../../assets/LoginPage/Logo.png")} style={tw`h-25 w-25 self-center mt-20`} />
+      <ScrollView contentContainerStyle={tw`flex-1 justify-center items-center p-6`}>
+        
+        {step === 0 ? (
+          <View style={tw`items-center mb-6`}>
+            <Text style={tw`text-xl font-bold mt-4 text-center`}>Selamat datang di Saraya, {fullname}</Text>
+            <Text style={tw`text-center text-xs text-gray-600 mt-2`}>
+              Mari kita mulai untuk mempersiapkan konten pilihan sesuai dengan kebutuhan kamu!
+            </Text>
+            <TouchableOpacity
+              style={tw`bg-red-500 py-3 px-6 rounded-full mt-4`}
+              onPress={() => setStep(1)}
+            >
+              <Text style={tw`text-white text-center font-bold`}>Mulai Sekarang!</Text>
+            </TouchableOpacity>
           </View>
-        )}
+        ) : (
+          <>
+            {step === 1 && (
+              <View style={tw`w-full`}>
+                <Text style={tw`text-lg mb-2 font-bold`}>Nama Bisnis</Text>
+                <TextInput
+                  style={tw`border border-gray-300 rounded-lg p-2 mb-4`}
+                  placeholder="Masukkan nama bisnis Anda"
+                  value={businessName}
+                  onChangeText={setBusinessName}
+                />
+              </View>
+            )}
 
         {step === 2 && (
           <View style={tw`w-full`}>
@@ -292,93 +248,95 @@ export default function BusinessSurvey() {
         )}
 
         {step === 4 && (
-          <View style={tw`w-full`}>
-            <Text style={tw`text-lg mb-2 font-bold`}>
-              Apa jenis topik edukasi yang paling Anda butuhkan?
-            </Text>
-            <ScrollView
-              contentContainerStyle={tw`w-full flex-row flex-wrap justify-between`}
-              horizontal={false}
-            >
-              {[
-                "Kelola Keuangan",
-                "Akses Modal",
-                "Investasi",
-                "Tabungan",
-                "Kelola Arus Kas",
-                "Perencanaan Pajak",
-                "Asuransi Bisnis",
-                "Menyusun Anggaran Bisnis",
-                "Pemasaran Ekspansi",
-                "Pemasaran Konten",
-                "Strategi KOL",
-                "Pemasaran Digital",
-              ].map((topic) => (
-                <TouchableOpacity
-                  key={topic}
-                  style={[
-                    tw`w-[48%] p-3 rounded-lg mb-2 border`, // Mengatur lebar agar dua kolom
-                    educationTopics.includes(topic)
-                      ? tw`bg-red-500 border-red-500`
-                      : tw`border-gray-300`,
-                  ]}
-                  onPress={() => handleEducationTopicSelect(topic)}
-                >
-                  <Text
-                    style={tw`text-center ${
-                      educationTopics.includes(topic)
-                        ? "text-white"
-                        : "text-black"
-                    }`}
-                  >
-                    {topic}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        )}
-
-        {step === 5 && (
-          <View style={tw`w-full`}>
-            <Text style={tw`text-lg mb-2 font-bold`}>
-              Kemampuan Finansial Anda saat ini
-            </Text>
-            {[
-              "Basic: Baru memulai",
-              "Menengah: Paham dasar keuangan",
-              "Mahir: Paham perencanaan dan analisis",
-            ].map((level) => (
-              <TouchableOpacity
-                key={level}
-                style={[
-                  tw`p-3 rounded-lg mb-2 border`,
-                  financialSkill === level
-                    ? tw`bg-red-500 border-red-500`
-                    : tw`border-gray-300`,
-                ]}
-                onPress={() => setFinancialSkill(level)}
-              >
-                <Text
-                  style={tw`text-center ${
-                    financialSkill === level ? "text-white" : "text-black"
-                  }`}
-                >
-                  {level}
+              <View style={tw`w-full`}>
+                <Text style={tw`text-lg mb-2 font-bold`}>
+                  Apa jenis topik edukasi yang paling Anda butuhkan?
                 </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
+                <ScrollView
+                  contentContainerStyle={tw`w-full flex-row flex-wrap justify-between`}
+                  horizontal={false}
+                >
+                  {[
+                    "Kelola Keuangan",
+                    "Akses Modal",
+                    "Investasi",
+                    "Tabungan",
+                    "Kelola Arus Kas",
+                    "Perencanaan Pajak",
+                    "Asuransi Bisnis",
+                    "Menyusun Anggaran Bisnis",
+                    "Pemasaran Ekspansi",
+                    "Pemasaran Konten",
+                    "Strategi KOL",
+                    "Pemasaran Digital",
+                  ].map((topic) => (
+                    <TouchableOpacity
+                      key={topic}
+                      style={[
+                        tw`w-[48%] p-3 rounded-lg mb-2 border`,
+                        educationTopics.includes(topic)
+                          ? tw`bg-red-500 border-red-500`
+                          : tw`border-gray-300`,
+                      ]}
+                      onPress={() => handleEducationTopicSelect(topic)}
+                    >
+                       <Text
+                        style={tw`text-center ${
+                          educationTopics.includes(topic)
+                            ? "text-white"
+                            : "text-black"
+                        }`}
+                      >
+                        {topic}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
 
-        <TouchableOpacity
-          style={tw`bg-red-500 py-3 px-6 rounded-full mt-4`}
-          onPress={handleNextStep}
-        >
-          <Text style={tw`text-white text-center font-bold`}>
-            {step < 5 ? "Lanjutkan" : "Selesai"}
-          </Text>
-        </TouchableOpacity>
+            {step === 5 && (
+              <View style={tw`w-full`}>
+                <Text style={tw`text-lg mb-2 font-bold`}>
+                  Kemampuan Finansial Anda saat ini (pilih yang paling sesuai):
+                </Text>
+                {[
+                  "Basic: Baru memulai",
+                  "Menengah: Paham dasar keuangan",
+                  "Mahir: Paham perencanaan dan analisis",
+                ].map((level) => (
+                  <TouchableOpacity
+                    key={level}
+                    style={[
+                      tw`p-3 rounded-lg mb-2 border`,
+                      financialSkill === level
+                        ? tw`bg-red-500 border-red-500`
+                        : tw`border-gray-300`,
+                    ]}
+                    onPress={() => setFinancialSkill(level)}
+                  >
+                    <Text
+                      style={tw`text-center ${
+                        financialSkill === level ? "text-white" : "text-black"
+                      }`}
+                    >
+                      {level}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            <TouchableOpacity
+              style={tw`bg-[#BB1624] py-3 px-6 rounded-full mt-4`}
+              onPress={handleNextStep}
+            >
+              <Text style={tw`text-white text-center font-bold`}>
+                {step < 5 ? "Lanjutkan" : "Selesai"}
+              </Text>
+            </TouchableOpacity>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

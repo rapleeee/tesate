@@ -1,18 +1,27 @@
-import React, { useEffect, useState } from 'react';
-import { SafeAreaView, ScrollView, Text, View, TouchableOpacity, StatusBar, RefreshControl } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; 
-import tw from 'twrnc';
-import { useNavigation } from '@react-navigation/native';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../../../firebase'; 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect, useState } from "react";
+import {
+  SafeAreaView,
+  ScrollView,
+  Text,
+  View,
+  TouchableOpacity,
+  StatusBar,
+  RefreshControl,
+  Image,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import tw from "twrnc";
+import { useNavigation } from "@react-navigation/native";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../../../firebase";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const ProgramSaya = () => {
   const [userId, setUserId] = useState(null);
   const [courses, setCourses] = useState([]);
-  const [filter, setFilter] = useState('all'); 
-  const [refreshing, setRefreshing] = useState(false); 
-  const navigation = useNavigation(); 
+  const [filter, setFilter] = useState("all");
+  const [refreshing, setRefreshing] = useState(false);
+  const navigation = useNavigation();
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -25,37 +34,50 @@ const ProgramSaya = () => {
   }, []);
 
   const fetchUserCourses = async (uid) => {
-    const userDocRef = doc(db, 'users', uid);
+    const userDocRef = doc(db, "users", uid);
     const userDoc = await getDoc(userDocRef);
     if (userDoc.exists()) {
       const userData = userDoc.data();
       const userCourses = userData.coursesJoined || [];
       const completedModules = userData.completedModules || {};
-      
+
       const storedModules = await AsyncStorage.getItem("modules");
       const parsedModules = storedModules ? JSON.parse(storedModules) : [];
 
-      setCourses(userCourses.map(courseId => {
-        const progress = completedModules[courseId] || [];
-        const moduleProgress = parsedModules.length
-          ? parsedModules.reduce(
-              (sum, module) =>
-                sum +
-                module.lessons.filter((lesson) => lesson.completed).length,
-              0
-            ) / parsedModules.reduce(
-              (sum, module) => sum + module.lessons.length,
-              0
-            ) * 100
-          : 0;
+      setCourses(
+        userCourses.map((courseId) => {
+          const progress = completedModules[courseId] || [];
+          const moduleProgress = parsedModules.length
+            ? (parsedModules.reduce(
+                (sum, module) =>
+                  sum +
+                  module.lessons.filter((lesson) => lesson.completed).length,
+                0
+              ) /
+                parsedModules.reduce(
+                  (sum, module) => sum + module.lessons.length,
+                  0
+                )) *
+              100
+            : 0;
 
-        return { 
-          courseId, 
-          progress, 
-          totalModules: 4, 
-          moduleProgress 
-        };
-      }));
+          return {
+            courseId,
+            progress,
+            totalModules: 4,
+            moduleProgress,
+            title:
+              courseId === 1
+                ? "Dasar Keuangan Bisnis"
+                : "Pengenalan Strategi Pengembangan Usaha",
+            category: courseId === 1 ? "Keuangan Bisnis" : "Investasi Usaha",
+            image:
+              courseId === 1
+                ? require("../../assets/keu.png")
+                : require("../../assets/financial.png"),
+          };
+        })
+      );
     }
   };
 
@@ -67,11 +89,12 @@ const ProgramSaya = () => {
     setRefreshing(false);
   };
 
-  const filteredCourses = courses.filter(course => {
-    const completedPercentage = course.moduleProgress; 
-    if (filter === 'all') return true;
-    if (filter === 'inProgress') return completedPercentage > 0 && completedPercentage < 100;
-    if (filter === 'completed') return completedPercentage === 100;
+  const filteredCourses = courses.filter((course) => {
+    const completedPercentage = course.moduleProgress;
+    if (filter === "all") return true;
+    if (filter === "inProgress")
+      return completedPercentage > 0 && completedPercentage < 100;
+    if (filter === "completed") return completedPercentage === 100;
     return true;
   });
 
@@ -86,58 +109,50 @@ const ProgramSaya = () => {
         }
       >
         <View
-          style={tw`flex-row items-center mt-10 mb-2 border-b border-gray-300 pb-2`}
+          style={tw`flex-row items-center mt-10 mb-2  pb-2`}
         >
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color="#8F8F8FFF" />
+            <Ionicons name="arrow-back" size={24} color="#505050FF" />
           </TouchableOpacity>
-          <Text style={tw`text-xl text-gray-500 ml-4`}>
-            My Courses
-          </Text>
+          <View style={tw`flex-1 items-center`}>
+            <Text style={tw`text-lg text-gray-700`}>Lesson Saya</Text>
+          </View>
         </View>
 
-        <View style={tw`flex-row justify-around mb-4`}>
-          <TouchableOpacity
-            style={tw`flex-1 items-center py-2 rounded-full ${
-              filter === "all" ? "bg-[#BB1624]" : "bg-gray-200"
-            }`}
-            onPress={() => setFilter("all")}
-          >
-            <Text
-              style={tw`${filter === "all" ? "text-white" : "text-gray-500"}`}
-            >
-              All
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={tw`flex-1 items-center py-2 rounded-full mx-2 ${
-              filter === "inProgress" ? "bg-[#BB1624]" : "bg-gray-200"
-            }`}
-            onPress={() => setFilter("inProgress")}
-          >
-            <Text
-              style={tw`${
-                filter === "inProgress" ? "text-white" : "text-gray-500"
-              }`}
-            >
-              In Progress
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={tw`flex-1 items-center py-2 rounded-full ${
-              filter === "completed" ? "bg-[#BB1624]" : "bg-gray-200"
-            }`}
-            onPress={() => setFilter("completed")}
-          >
-            <Text
-              style={tw`${
-                filter === "completed" ? "text-white" : "text-gray-500"
-              }`}
-            >
-              Completed
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <View style={tw`flex-row justify-around mb-4 mt-4 bg-gray-200 rounded-xl p-1`}>
+      <TouchableOpacity
+        style={tw`flex-1 items-center py-2 rounded-lg ${
+          filter === "all" ? "bg-[#BB1624]" : ""
+        }`}
+        onPress={() => setFilter("all")}
+      >
+        <Text style={tw`${filter === "all" ? "text-white" : "text-gray-500"}`}>
+          All
+        </Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity
+        style={tw`flex-1 items-center py-2 rounded-lg ${
+          filter === "inProgress" ? "bg-[#BB1624]" : ""
+        }`}
+        onPress={() => setFilter("inProgress")}
+      >
+        <Text style={tw`${filter === "inProgress" ? "text-white" : "text-gray-500"}`}>
+          In Progress
+        </Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity
+        style={tw`flex-1 items-center py-2 rounded-lg ${
+          filter === "completed" ? "bg-[#BB1624]" : ""
+        }`}
+        onPress={() => setFilter("completed")}
+      >
+        <Text style={tw`${filter === "completed" ? "text-white" : "text-gray-500"}`}>
+          Completed
+        </Text>
+      </TouchableOpacity>
+    </View>
 
         {filteredCourses.length === 0 ? (
           <Text style={tw`text-gray-500 mt-4`}>
@@ -154,25 +169,29 @@ const ProgramSaya = () => {
                   navigation.navigate("ventureCapital", {
                     courseId: course.courseId,
                   })
-                } // Navigasi ke halaman VentureCapital
+                }
               >
-                <View style={tw`w-20 h-20 bg-red-300 rounded-lg`} />
+                <Image source={course.image} style={tw`w-20 h-20 rounded-lg`} />
                 <View style={tw`ml-4 flex-1`}>
                   <Text style={tw`text-sm text-[#BB1624]`}>
-                    Investasi Usaha
+                    {course.category}
                   </Text>
                   <Text style={tw`text-base font-bold mt-1`}>
-                    Introduction of Venture Capital
+                    {course.title}
                   </Text>
-                  <Text style={tw`text-sm text-gray-500`}>4 Modules</Text>
+                  <Text style={tw`text-sm text-gray-500`}>
+                    {course.totalModules} Modules
+                  </Text>
                   <View style={tw`mt-2`}>
                     <Text style={tw`text-sm text-gray-500`}>
                       Complete {Math.floor(completedPercentage)}%
                     </Text>
                     <View style={tw`w-full h-2 bg-gray-300 rounded-full mt-1`}>
                       <View
-                        style={tw`h-full bg-[#BB1624] rounded-full`}
-                        width={`${completedPercentage}%`}
+                        style={[
+                          tw`h-full bg-[#BB1624] rounded-full`,
+                          { width: `${completedPercentage}%` },
+                        ]}
                       />
                     </View>
                   </View>

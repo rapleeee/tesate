@@ -2,7 +2,8 @@
   "expo": {
     "name": "Saraya",
     "slug": "sarayaplus",
-    "version": "1.0.0",
+    "scheme": "sarayaplus",
+    "version": "2.1.0",
     "orientation": "portrait",
     "icon": "./App/assets/Logo.png",
     "userInterfaceStyle": "light",

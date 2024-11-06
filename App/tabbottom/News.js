@@ -1,32 +1,24 @@
 import React, { useState, useEffect } from "react";
-import { ScrollView, Text, View, TouchableOpacity } from "react-native";
+import { ScrollView, Text, View, TouchableOpacity, Image, ImageBackground } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "react-native-vector-icons";
 import tw from "twrnc";
-import { db } from "./../../firebase"; // import firebase setup
+import { db } from "./../../firebase"; 
 import { collection, onSnapshot } from "firebase/firestore";
 
-// Fungsi untuk menghitung total skor atau rata-rata skor pengguna
-const calculateTotalScore = (scores) => {
-  // Jika totalScores ada, kembalikan totalScores
-  if (scores.totalScore !== null && scores.totalScore !== undefined) {
-    return scores.totalScore;
-  }
-
-  // Jika tidak ada totalScore, hitung dari objek skor yang diberikan
-  const totalScores = Object.values(scores).reduce((acc, score) => acc + score, 0);
-
-  // Hitung jumlah skor yang ada
-  const numberOfScores = Object.values(scores).length;
-
-  // Pastikan tidak ada pembagian dengan 0 dan kembalikan hasil total skor
-  return numberOfScores > 0 ? Math.floor(totalScores / numberOfScores) : 0;
+// Fungsi untuk menghitung waktu tersisa hingga pergantian hari (jam 00:00)
+const calculateTimeUntilMidnight = () => {
+  const now = new Date();
+  const midnight = new Date();
+  midnight.setHours(24, 0, 0, 0); // Set waktu ke 00:00 besok
+  const timeRemaining = midnight - now; // Selisih waktu dalam milidetik
+  return timeRemaining;
 };
 
-const News = () => {
+const News = ({ navigation }) => {
   const [users, setUsers] = useState([]);
-  const [countdown, setCountdown] = useState(3600); // 1 hour countdown (3600 seconds)
+  const [countdown, setCountdown] = useState(calculateTimeUntilMidnight()); 
 
   // Mengambil data pengguna dari Firebase Firestore
   useEffect(() => {
@@ -41,107 +33,125 @@ const News = () => {
     return () => unsubscribe();
   }, []);
 
-  // Countdown timer untuk hitungan mundur
+  // Countdown timer untuk hitungan mundur hingga pergantian hari
   useEffect(() => {
     const timer = setInterval(() => {
-      setCountdown((prevCountdown) => (prevCountdown > 0 ? prevCountdown - 1 : 3600));
+      setCountdown((prevCountdown) =>
+        prevCountdown > 0 ? prevCountdown - 1000 : calculateTimeUntilMidnight()
+      );
     }, 1000);
 
     return () => clearInterval(timer);
   }, []);
 
   // Format waktu countdown ke format HH:MM:SS
-  const formatTime = (timeInSeconds) => {
-    const hours = Math.floor(timeInSeconds / 3600);
-    const minutes = Math.floor((timeInSeconds % 3600) / 60);
-    const seconds = timeInSeconds % 60;
-    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds
+  const formatTime = (timeInMillis) => {
+    const hours = Math.floor(timeInMillis / (1000 * 60 * 60));
+    const minutes = Math.floor((timeInMillis % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((timeInMillis % (1000 * 60)) / 1000);
+    return `${hours.toString().padStart(2, "0")}:${minutes
       .toString()
-      .padStart(2, "0")}`;
+      .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   };
 
-  // Urutkan pengguna berdasarkan total skor tertinggi ke terendah
+  // Urutkan pengguna berdasarkan total skor tertinggi ke terendah untuk peringkat saja
   const sortedUsers = users
     .map((user) => ({
       ...user,
-      totalScore: calculateTotalScore(user.scores),
+      totalScore: user.scores ? Object.values(user.scores).reduce((a, b) => a + b, 0) : 0, // Hitung total score
     }))
-    .sort((a, b) => b.totalScore - a.totalScore);
+    .sort((a, b) => b.totalScore - a.totalScore) // Urutkan berdasarkan score tertinggi
+    .slice(0, 10); // Batasi ke 10 besar
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-white`}>
-      <ScrollView>
-        <StatusBar />
+    <SafeAreaView style={tw`flex-1`}>
+      <ImageBackground
+        source={require('./../assets/leaderboard/gradientbackground.png')} // Background gradient
+        style={tw`flex-1`}
+        resizeMode="cover"
+      >
+        <ScrollView>
+          <StatusBar />
 
-        {/* Header */}
-        <View style={tw`flex-row items-center justify-between px-4 py-3 bg-white shadow`}>
-          <TouchableOpacity>
-            <Ionicons name="arrow-back" size={24} color="#787879" />
-          </TouchableOpacity>
-          <Text style={tw`text-lg text-gray-600`}>Leaderboard</Text>
-          <TouchableOpacity>
-            <Ionicons name="alert-circle-outline" size={24} color="#BB1624" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Konten */}
-        <View style={tw`items-center px-4 py-5`}>
-          {/* Card Section */}
-          <View style={tw`w-4/5 bg-yellow-600 rounded-xl p-5 items-center mb-5`}>
-            <Ionicons name="trophy-outline" size={100} color="#fff" style={tw`mb-2`} />
-            <Text style={tw`text-lg text-white`}>Ambassador Elite</Text>
-          </View>
-
-          {/* Countdown Section */}
-          <Text style={tw`text-gray-600 mb-2`}>Settlement Countdown:</Text>
-          <View style={tw`flex-row items-center mb-5`}>
-            <Ionicons name="timer-outline" size={24} color="#E91E63" />
-            <Text style={tw`ml-2 text-lg text-pink-600`}>{formatTime(countdown)}</Text>
-          </View>
-
-          {/* Tabs */}
-          <View style={tw`flex-row mb-5`}>
-            <TouchableOpacity style={tw`flex-1 bg-[#BF3131] p-3 rounded-l-xl items-center`}>
-              <Text style={tw`text-white font-bold`}>Ranking</Text>
+          <View style={tw`flex-row justify-between z-10 mt-4`}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={tw`left-5`}>
+              <Ionicons name="arrow-back" size={24} color="black" />
             </TouchableOpacity>
-            <TouchableOpacity style={tw`flex-1 bg-gray-200 p-3 rounded-r-xl items-center`}>
-              <Text style={tw`text-gray-600 font-bold`}>Global</Text>
+            <Text style={tw`text-gray-800 text-base`}>Leaderboard</Text>
+            <TouchableOpacity onPress={() => alert("Notifikasi")} style={tw`right-5`}>
+              <Ionicons name="information-circle-outline" size={24} color="black" />
             </TouchableOpacity>
           </View>
 
-          {/* Ranking List */}
-          <View style={tw`w-full`}>
-            {/* Ranking Header */}
-            <View style={tw`flex-row justify-between px-2 py-2 bg-red-200 rounded-t-xl`}>
-              <Text style={tw`text-gray-800 font-bold flex-1`}>Ranking</Text>
-              <Text style={tw`text-gray-800 font-bold flex-1 text-center`}>Name</Text>
-              <Text style={tw`text-gray-800 font-bold flex-1 text-center`}>Point</Text>
-              <Text style={tw`text-gray-800 font-bold flex-1 text-right`}>Reward</Text>
+          {/* Bagian gambar leaderboard */}
+          <View style={tw`relative mt-[-64]`}>
+            <Image
+              source={require("./../assets/leaderboard/cardLeaderboard.png")} 
+              style={tw`w-full h-70 mb-15`}
+              resizeMode="stretch"
+            />
+            <View style={tw`absolute w-full items-center mt-18`}>
+              <Image source={require("./../assets/leaderboard/gold.png")} style={tw`w-24 h-24 mt-2`} />
+              <TouchableOpacity style={tw` mt-4`}>
+                <Text style={tw`text-yellow-900 text-xl`}>Ambassador Elite</Text>
+              </TouchableOpacity>
+              <Text style={tw`text-black mt-2`}>Masuk 10 besar untuk bertahan di level ini!</Text>
             </View>
+          </View>
 
-            {/* Daftar Pengguna */}
+          {/* Countdown waktu reset */}
+          <Text style={tw`text-gray-200 text-center mb-2 mt-[-52]`}>Reset dalam:</Text>
+          <View style={tw`flex-row justify-center items-center mb-5`}>
+            <Ionicons name="timer-outline" size={24} color="#E91E63" />
+            <Text style={tw`ml-2 text-lg text-pink-200`}>{formatTime(countdown)}</Text>
+          </View>
+
+          {/* Leaderboard List */}
+          <View style={tw`w-full px-4`}>
             {sortedUsers.map((user, index) => (
-              <View key={index} style={tw`flex-row items-center bg-red-500 p-3 rounded-xl mb-2 justify-between`}>
+              <View
+                key={user.id}
+                style={tw`flex-row items-center p-3 rounded-xl mb-2 justify-between gap-4 bg-[rgba(128,128,128,0.3)]`}
+              >
                 {/* Ranking */}
-                <View style={tw`w-7 h-7 bg-yellow-300 rounded-full items-center justify-center`}>
-                  <Text style={tw`text-sm font-bold`}>{index + 1}</Text>
+                {index + 1 <= 3 ? (
+                  <Image
+                    source={
+                      index === 0
+                        ? require('./../assets/leaderboard/medal1.png')
+                        : index === 1
+                        ? require('./../assets/leaderboard/medal2.png')
+                        : require('./../assets/leaderboard/medal3.png')
+                    }
+                    style={tw`w-7 h-7`}
+                  />
+                ) : (
+                  <View style={tw`w-7 h-7 rounded-full items-center justify-center`}>
+                    <Text style={tw`text-sm text-white font-bold`}>{index + 1}</Text>
+                  </View>
+                )}
+
+                {/* Foto Profil dari Database atau Placeholder */}
+                <View style={tw`w-10 h-10 bg-gray-200 rounded-full items-center justify-center mr-3`}>
+                  {user.profileImage ? (
+                    <Image source={{ uri: user.profileImage }} style={tw`w-full h-full rounded-full`} />
+                  ) : (
+                    <Ionicons name="person-circle-outline" size={24} color="#fff" />
+                  )}
                 </View>
 
                 {/* Nama Pengguna */}
-                <Text style={tw`flex-1 ml-3 text-base text-white`}>{user.fullname}</Text>
+                <Text style={tw`flex-1 text-base text-white`}>{user.fullname || "-"}</Text>
 
-                {/* Total atau Rata-rata Skor */}
-                <Text style={tw`flex-1 text-base font-bold text-white text-center`}>
-                  {user.totalScore}
+                {/* Total XP yang disimpan */}
+                <Text style={tw`text-base text-white`}>
+                  {user.xp ? `${user.xp} XP` : "-"}  {/* Menampilkan XP yang tersimpan */}
                 </Text>
-
-                {/* Placeholder untuk Reward */}
-                <View style={tw`w-10 h-10 bg-white border border-yellow-500 rounded-md`} />
               </View>
             ))}
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </ImageBackground>
     </SafeAreaView>
   );
 };

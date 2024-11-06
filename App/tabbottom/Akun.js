@@ -218,6 +218,14 @@ export default function Akun() {
           </View>
         </View>
 
+        <View style={tw`flex-row justify-between m-3`}>
+          <Text style={tw`text-base font-bold text-red-700`}>Achievement</Text>
+          <Text>See All</Text>
+            
+        </View>
+          <View style={tw`py-10 px-20 bg-gray-700 m-3 rounded-lg`}>
+          </View>
+
         <TouchableOpacity style={tw`bg-red-700 h-10 mx-12 mt-8 rounded-full justify-center items-center shadow-lg`} onPress={handleLogout}>
           <Text style={tw`text-white font-bold text-sm`}>Logout</Text>
         </TouchableOpacity>

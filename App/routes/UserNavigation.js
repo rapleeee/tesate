@@ -44,6 +44,7 @@ import InvestasiUsaha from "../listCourses/InvestasiUsaha";
 import ProgramSaya from "../listCourses/myCourses/ProgramSaya";
 import VentureCapital from "../listCourses/myCourses/module/VentureCapital";
 import VideoMateriKeuanganII from "../etc/Materi/SubabMateri/Keuangan/VideoMateriKeuanganII";
+import Roadmap from "../tabbottom/Roadmap";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -60,7 +61,7 @@ const CustomTabBarButton = ({ children, onPress }) => (
         borderRadius: 35,
         borderWidth: 4,
         borderColor: "#E3E3E3",
-        backgroundColor: "#7d0a0a",
+        backgroundColor: "#BB1624",
       }}
     >
       {children}
@@ -93,19 +94,19 @@ const UserNavigation = () => {
           component={Main}
           options={{
             tabBarIcon: ({ focused }) => (
-              <TabBarIcon iconName="home" label="Home" focused={focused} />
+              <TabBarIcon iconName="home" label="Beranda" focused={focused} />
             ),
           }}
         />
 
         <Tab.Screen
-          name="myCourses"
-          component={ProgramSaya}
+          name="tugas"
+          component={News}
           options={{
             tabBarIcon: ({ focused }) => (
               <TabBarIcon
-                iconName="newspaper"
-                label="myCourse"
+                iconName="leaderboard"
+                label="Leaderboard"
                 focused={focused}
                 additionalStyle={{ marginRight: 15 }}
               />
@@ -114,50 +115,30 @@ const UserNavigation = () => {
         />
 
         <Tab.Screen
-          name="LaporanKeuangan"
-          component={LaporanKeuangan}
+          name="roadmap"
+          component={Roadmap}
           options={{
             tabBarIcon: () => (
-              <MaterialCommunityIcons name="bank" size={24} color="#E3E3E3" />
+              <MaterialCommunityIcons name="book-education-outline" size={34} color="#E3E3E3" />
             ),
             tabBarButton: (props) => <CustomTabBarButton {...props} />,
           }}
         />
+        
+
         <Tab.Screen
-          name="tugas"
+          name="leaderboard"
           component={Tugas}
           options={{
             tabBarIcon: ({ focused }) => (
-              <View style={{ alignItems: "center", justifyContent: "center" }}>
-                <Image
-                  source={require("../assets/homePage/Vector.png")} // Ganti dengan path gambar yang benar
-                  style={[
-                    {
-                      width: 20, // Atur ukuran lebar icon
-                      height: 20, // Atur ukuran tinggi icon
-                    },
-                    focused
-                      ? { tintColor: "#7d0a0a" } // Warna ketika focus
-                      : { tintColor: "#767776F0" }, // Warna ketika tidak focus
-                  ]}
-                  resizeMode="contain" // Agar gambar tetap dalam proporsi
-                />
-                <Text
-                  style={[
-                    {
-                      fontSize: 12, // Ukuran teks
-                      marginTop: 2, // Jarak antara gambar dan teks
-                      color: focused ? "#7d0a0a" : "#767776F0", // Warna ketika focus dan tidak focus
-                    },
-                  ]}
-                >
-                  Tantangan
-                </Text>
-              </View>
+              <TabBarIcon
+                iconName="medal"
+                label="Reward"
+                focused={focused}
+              />
             ),
           }}
         />
-
         <Tab.Screen
           name="akun"
           component={Akun}
@@ -218,6 +199,7 @@ const UserNavigation = () => {
         <Stack.Screen name="myCourses" component={ProgramSaya}/>
         <Stack.Screen name="ventureCapital" component={VentureCapital}/>
         <Stack.Screen name="videoKeuanganII" component={VideoMateriKeuanganII}/>
+        <Stack.Screen name="roadmap" component={Roadmap}/>
         
       </Stack.Navigator>
    

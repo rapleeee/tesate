@@ -1,28 +1,37 @@
-import React, { useRef, useState } from 'react';
-import { Text, View, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Video } from 'expo-av';
-import tw from 'twrnc';
-import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import React, { useRef, useState, useEffect } from "react";
+import { Text, View, TouchableOpacity, Dimensions } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Video } from "expo-av";
+import tw from "twrnc";
+import { Ionicons } from "@expo/vector-icons";
+import Slider from "@react-native-community/slider";
+import { useNavigation } from "@react-navigation/native";
 
 const VideoMateriKeuanganII = () => {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [selectedPart, setSelectedPart] = useState(null);
-  const navigation = useNavigation(); 
+  const [progress, setProgress] = useState(0); // for the progress bar
+  const [currentTime, setCurrentTime] = useState(0); // current time of video
+  const [duration, setDuration] = useState(0); // duration of the video
+  const screenHeight = Dimensions.get("window").height;
+  const screenWidth = Dimensions.get("window").width;
+  const navigation = useNavigation();
 
-  const seekToTime = async (timeInSeconds, part) => {
-    if (videoRef.current) {
-      try {
-        await videoRef.current.setPositionAsync(timeInSeconds * 1000);
-        setSelectedPart(part); 
-      } catch (error) {
-        console.error('Error seeking video:', error);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (videoRef.current) {
+        videoRef.current.getStatusAsync().then((status) => {
+          if (status.isLoaded && status.durationMillis > 0) {
+            setProgress((status.positionMillis / status.durationMillis) * 100);
+            setCurrentTime(status.positionMillis);
+            setDuration(status.durationMillis);
+          }
+        });
       }
-    }
-  };
+    }, 500);
 
+    return () => clearInterval(interval);
+  }, []);
 
   const togglePlayPause = async () => {
     if (videoRef.current) {
@@ -37,70 +46,100 @@ const VideoMateriKeuanganII = () => {
     }
   };
 
+  // Handler for when video finishes
+  const onPlaybackStatusUpdate = (status) => {
+    if (status.didJustFinish && !status.isLooping) {
+      navigation.navigate("videoKeuanganII"); // Navigate to next video when finished
+    }
+  };
+
+  // Convert milliseconds to time format (mm:ss)
+  const formatTime = (timeMillis) => {
+    const minutes = Math.floor(timeMillis / 1000 / 60);
+    const seconds = Math.floor((timeMillis / 1000) % 60);
+    return `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
+  // Seek video to the new position when progress bar is dragged
+  const onSeek = async (value) => {
+    const seekPosition = (value / 100) * duration;
+    await videoRef.current.setPositionAsync(seekPosition);
+  };
+
   return (
-    <SafeAreaView style={tw`flex-1 bg-white`}>
-      <View style={tw`p-4`}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={tw`mb-5`}>
-          <Ionicons name="arrow-back" size={24} color="gray" />
-        </TouchableOpacity>
+    <SafeAreaView style={tw`flex-1 bg-black`}>
+      <View style={{ height: screenHeight }}>
+        {/* Video container */}
 
-        <Text style={tw`text-lg font-bold mb-2`}>Lesson 2</Text>
-        <Text style={[tw`text-base font-bold mb-5`, { color: '#BB1624' }]}>
-            Building a Solid Business Model Canvas
-        </Text>
+        <Video
+          ref={videoRef}
+          source={require("../../../../assets/Video/Keuangan.mp4")}
+          style={{ height: screenHeight, width: screenWidth }} // Fullscreen video
+          resizeMode="cover"
+          onError={(error) => console.error("Video Error:", error)}
+          onPlaybackStatusUpdate={onPlaybackStatusUpdate} // Check for when video finishes
+        />
 
-        <View style={tw`w-full h-50 mb-5`}>
-          <Video
-            ref={videoRef}
-            source={require('../../../../assets/Video/Keuangan.mp4')}
-            style={tw`w-full h-full bg-gray-200 rounded-lg`}
-            controls={true}
-            resizeMode="contain"
-            onError={(error) => console.error('Video Error:', error)}
-            onBuffer={() => console.log('Buffering...')}
-            useNativeControls
-            isLooping
+        <View
+          style={tw`absolute flex-row justify-between w-full h-1.5 mt-4 px-2`}
+        >
+          {/* Static background bars */}
+          <View style={tw`flex-row w-full h-full`}>
+            <View style={tw`flex-1 bg-gray-300 mx-1 rounded-full`} />
+            <View style={tw`flex-1 bg-gray-300 mx-1 rounded-full`} />
+            <View style={tw`flex-1 bg-gray-300 mx-1 rounded-full`} />
+            <View style={tw`flex-1 bg-gray-300 mx-1 rounded-full`} />
+          </View>
+          {/* Moving red progress bar */}
+          <View
+            style={[
+              tw`absolute left-0 h-full bg-red-600 rounded-full`,
+              { width: `${progress / 4}%`, maxWidth: "100%" },
+            ]}
           />
         </View>
 
-        <View style={tw`bg-gray-100 p-4 rounded-lg mb-5`}>
-          <View style={tw`flex-row justify-between mb-2`}>
-            <Text style={{ color: selectedPart === 'intro' ? '#BB1624' : 'gray' }}>Intro</Text>
-            <Text style={{ color: selectedPart === 'intro' ? '#BB1624' : 'gray' }}>0:20</Text>
+        {/* Play/Pause button on top of the video */}
+
+        {/* Slider and time controls under the video */}
+        <View style={tw`absolute bottom-24 left-0 right-0 px-4`}>
+          {/* Time display */}
+          <View style={tw`flex-row justify-between mb-2 `}>
+            <Text style={tw`text-white`}>{formatTime(currentTime)}</Text>
+            <Text style={tw`text-white`}>{formatTime(duration)}</Text>
           </View>
-          <TouchableOpacity
-            onPress={() => seekToTime(1 * 60 + 30, 'part1')}
-            style={tw`flex-row justify-between mb-2`}
+
+          {/* Slider */}
+          <Slider
+            minimumValue={0}
+            maximumValue={100}
+            value={progress}
+            onSlidingComplete={onSeek}
+            minimumTrackTintColor="#BB1624"
+            maximumTrackTintColor="#E0E0E0"
+            thumbTintColor="#BB1624"
+            style={tw`w-full`}
+          />
+          <View
+            style={tw`absolute top-0 left-0 right-0 items-start ml-7 mt-12`}
           >
-            <Text style={{ color: selectedPart === 'part1' ? '#BB1624' : 'gray' }}>Part I</Text>
-            <Text style={{ color: selectedPart === 'part1' ? '#BB1624' : 'gray' }}>1:30</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => seekToTime(3 * 60, 'part2')}
-            style={tw`flex-row justify-between mb-2`}
-          >
-            <Text style={{ color: selectedPart === 'part2' ? '#BB1624' : 'gray' }}>Part II</Text>
-            <Text style={{ color: selectedPart === 'part2' ? '#BB1624' : 'gray' }}>3:00</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => seekToTime(4 * 60 + 30, 'part3')}
-            style={tw`flex-row justify-between mb-2`}
-          >
-            <Text style={{ color: selectedPart === 'part3' ? '#BB1624' : 'gray' }}>Part III</Text>
-            <Text style={{ color: selectedPart === 'part3' ? '#BB1624' : 'gray' }}>4:30</Text>
-          </TouchableOpacity>
-          <View style={tw`flex-row justify-between`}>
-            <Text style={{ color: selectedPart === 'conclusion' ? '#BB1624' : 'gray' }}>Conclusion</Text>
-            <Text style={{ color: selectedPart === 'conclusion' ? '#BB1624' : 'gray' }}>5:07</Text>
+            <TouchableOpacity
+              onPress={togglePlayPause}
+              style={tw`flex-row items-center bg-red-600 py-2 px-4 rounded-lg`}
+            >
+              <Ionicons
+                name={isPlaying ? "pause" : "play"}
+                size={16}
+                color="white"
+              />
+              <Text style={tw`text-white text-xs ml-2`}>
+                {isPlaying ? "Pause" : "Play"}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
-
-        <TouchableOpacity
-          onPress={() => console.log('Next Lesson')}
-          style={tw`bg-gray-500 rounded-lg p-4 items-center`}
-        >
-          <Text style={tw`text-white text-base`}>Next Lesson</Text>
-        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );

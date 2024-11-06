@@ -18,8 +18,9 @@ import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/aut
 import { Ionicons } from '@expo/vector-icons';
 import { doc, getDoc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import ScoreDetail from '../etc/Kuis/ScoreDetail';
+import * as Google from 'expo-auth-session/providers/google';
 import tw from 'twrnc';
+
 
 export default function Signin() {
   const [email, setEmail] = useState('');
@@ -29,6 +30,12 @@ export default function Signin() {
   const [secureTextEntry, setSecureTextEntry] = useState(true);
   const navigation = useNavigation();
 
+  // Google Auth Provider
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    androidClientId: '826300876657-lk3bji4sc7sj7i7iptdcs5eqehnmkbg7.apps.googleusercontent.com',
+    iosClientId: '826300876657-lk3bji4sc7sj7i7iptdcs5eqehnmkbg7.apps.googleusercontent.com', // Jika Anda menggunakan iOS
+    expoClientId: '826300876657-lk3bji4sc7sj7i7iptdcs5eqehnmkbg7.apps.googleusercontent.com', // Jika menggunakan Expo Go
+  });
   const togglePasswordVisibility = () => {
     setSecureTextEntry(!secureTextEntry);
   };
@@ -46,12 +53,17 @@ export default function Signin() {
       backAction
     );
 
-    const unsubscribe = auth.onAuthStateChanged((authUser) => {
+    const unsubscribe = auth.onAuthStateChanged(async (authUser) => {
       if (!authUser) {
         setLoading(false);
-      }
-      if (authUser) {
-        navigation.replace("MainApp");
+      } else {
+        const userDocRef = doc(db, "users", authUser.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists() && userDoc.data().hasCompletedSurvey) {
+          navigation.replace("MainApp");
+        } else {
+          navigation.replace("bisnisSurvey");
+        }
       }
     });
 
@@ -97,11 +109,7 @@ export default function Signin() {
 
   const login = async () => {
     if (email === "" || password === "") {
-      Alert.alert(
-        "Yakin mau login?",
-        "Kamu udah masukin Email apa Passwordnya?",
-        [{ text: "OK" }]
-      );
+      Alert.alert("Error", "Please enter both email and password.", [{ text: "OK" }]);
       return;
     }
 
@@ -120,17 +128,12 @@ export default function Signin() {
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        const userRole = userData.role;
-
-        if (userRole === "admin") {
-          navigation.replace("adminPanel");
-        } else if (userRole === "user") {
+        if (userData.hasCompletedSurvey) {
           navigation.replace("MainApp");
         } else {
-          console.log("Unknown user role:", userRole);
+          navigation.replace("BusinessSurvey");
         }
       } else {
-        console.log("No such document!");
         Alert.alert("Error", "User data not found.");
       }
     } catch (error) {
@@ -162,19 +165,23 @@ export default function Signin() {
     setIsRemembered(!isRemembered);
   };
 
+  // Google Login
+  useEffect(() => {
+    if (response?.type === 'success') {
+      const { authentication } = response;
+      // Use Firebase signInWithCredential if needed here
+    }
+  }, [response]);
+
+  const loginWithGoogle = () => {
+    promptAsync();
+  };
+
   return (
     <SafeAreaView style={tw`flex-1 bg-white`}>
       <ScrollView>
         <StatusBar />
-        <Image
-          source={require("./../assets/SignUpPage/Rectangle7.png")}
-          style={tw`w-full h-40`}
-          resizeMode="stretch"
-        />
-        <Image
-          source={require("./../assets/SignUpPage/Group108.png")}
-          style={tw`h-20 w-20 self-center mt--10`}
-        />
+        <Image source={require("./../assets/SignUpPage/Group108.png")} style={tw`h-20 w-20 self-center mt-20`} />
         <View style={tw`items-center mt-2`}>
           <Text style={tw`text-2xl font-bold text-gray-700 mb-6`}>Let's Sign In</Text>
           <Text style={tw`text-sm text-gray-700`}>Masuk ke Akun Anda</Text>
@@ -184,7 +191,6 @@ export default function Signin() {
           value={email}
           placeholder="Email"
           onChangeText={(text) => setEmail(text)}
-          autoFocus
         />
         <View style={tw`flex-row items-center mx-12 mt-2 p-2 border border-gray-400 rounded-lg`}>
           <TextInput
@@ -194,25 +200,14 @@ export default function Signin() {
             secureTextEntry={secureTextEntry}
             onChangeText={(text) => setPassword(text)}
           />
-          <TouchableOpacity
-            onPress={togglePasswordVisibility}
-            style={tw`ml-2 justify-center`}
-          >
-            <Ionicons
-              name={secureTextEntry ? "eye-off" : "eye"}
-              size={20}
-              color="grey"
-            />
+          <TouchableOpacity onPress={togglePasswordVisibility} style={tw`ml-2 justify-center`}>
+            <Ionicons name={secureTextEntry ? "eye-off" : "eye"} size={20} color="grey" />
           </TouchableOpacity>
         </View>
         <View style={tw`flex-row justify-between mx-12 mt-2`}>
           <View style={tw`flex-row items-center`}>
             <TouchableOpacity onPress={toggleRememberMe}>
-              <Ionicons
-                name={isRemembered ? "checkbox" : "checkbox-outline"}
-                size={16}
-                color="#BB1624"
-              />
+              <Ionicons name={isRemembered ? "checkbox" : "checkbox-outline"} size={16} color="#BB1624" />
             </TouchableOpacity>
             <Text style={tw`ml-2 text-xs text-gray-600`}>Ingat Saya</Text>
           </View>
@@ -220,26 +215,22 @@ export default function Signin() {
             <Text style={tw`text-xs text-blue-600`}>Lupa Password?</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={tw`bg-red-700 h-10 mx-12 mt-8 rounded-full justify-center items-center shadow-lg`} onPress={login}>
+        <TouchableOpacity style={tw`bg-red-700 h-10 mx-12 mt-8 rounded-xl justify-center items-center shadow-lg`} onPress={login}>
           <Text style={tw`text-white font-bold text-sm`}>Masuk</Text>
         </TouchableOpacity>
         <View style={tw`items-center mt-2`}>
           <Text style={tw`text-gray-600 text-xs`}>atau</Text>
-          <Pressable style={tw`flex-row items-center justify-center bg-white border border-gray-400 mt-2 p-2 rounded-lg shadow-lg`} onPress={ScoreDetail}>
-            <Image
-              source={require("./../assets/google-logo.webp")}
-              style={tw`w-4 h-4 mr-2`}
-            />
+          <Pressable style={tw`flex-row items-center justify-center bg-white border border-gray-400 mt-2 p-2 w-70 rounded-lg shadow-lg`} onPress={loginWithGoogle}>
+            <Image source={require("./../assets/google-logo.webp")} style={tw`w-4 h-4 mr-2`} />
             <Text style={tw`text-sm text-gray-700`}>Masuk dengan Google</Text>
           </Pressable>
         </View>
         <View style={tw`flex-row justify-center mt-2`}>
           <Text style={tw`text-xs`}>Belum punya akun? </Text>
-          <Text style={tw`text-xs text-blue-600`} onPress={() => navigation.navigate("signup")}>
-            Daftar
-          </Text>
+          <Text style={tw`text-xs text-blue-600`} onPress={() => navigation.navigate("signup")}>Daftar</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
+

@@ -11,7 +11,7 @@ export default function Start() {
     <SafeAreaView style={styles.container}>
       <StatusBar />
 
-      <Image source={require("./../assets/LoginPage/Rectangle.png")} />
+      <Image source={require("./../assets/StartPage/card.png")} />
       <View
         style={{
           shadowColor: "#000",
