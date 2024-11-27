@@ -6,6 +6,8 @@ import tw from "twrnc";
 import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import { useNavigation } from "@react-navigation/native";
+import { db, auth } from '../../../../../firebase'; // Pastikan path ini benar
+import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 
 const VideoMateriKeuanganII = () => {
   const videoRef = useRef(null);
@@ -46,14 +48,28 @@ const VideoMateriKeuanganII = () => {
     }
   };
 
-  // Handler for when video finishes
-  const onPlaybackStatusUpdate = (status) => {
+  // Handler ketika video selesai diputar
+  const onPlaybackStatusUpdate = async (status) => {
     if (status.didJustFinish && !status.isLooping) {
-      navigation.navigate("videoKeuanganII"); // Navigate to next video when finished
+      // Menandai modul kedua sebagai selesai di Firestore
+      const user = auth.currentUser;
+      if (user) {
+        const userRef = doc(db, 'users', user.uid);
+        try {
+          await updateDoc(userRef, {
+            completedModules: arrayUnion(2), // Asumsikan id modul adalah 2 untuk video kedua
+          });
+          console.log('Modul 2 telah diselesaikan');
+        } catch (error) {
+          console.error('Error updating user data:', error);
+        }
+      }
+      // Navigasi ke halaman `dasarKeuangan`
+      navigation.navigate("dasarKeuangan");
     }
   };
 
-  // Convert milliseconds to time format (mm:ss)
+  // Fungsi format waktu
   const formatTime = (timeMillis) => {
     const minutes = Math.floor(timeMillis / 1000 / 60);
     const seconds = Math.floor((timeMillis / 1000) % 60);
@@ -62,7 +78,6 @@ const VideoMateriKeuanganII = () => {
       .padStart(2, "0")}`;
   };
 
-  // Seek video to the new position when progress bar is dragged
   const onSeek = async (value) => {
     const seekPosition = (value / 100) * duration;
     await videoRef.current.setPositionAsync(seekPosition);
@@ -71,47 +86,46 @@ const VideoMateriKeuanganII = () => {
   return (
     <SafeAreaView style={tw`flex-1 bg-black`}>
       <View style={{ height: screenHeight }}>
-        {/* Video container */}
-
         <Video
           ref={videoRef}
-          source={require("../../../../assets/Video/Keuangan.mp4")}
-          style={{ height: screenHeight, width: screenWidth }} // Fullscreen video
+          source={require("../../../../assets/moduleVideo/module1/video2_module_1.mp4")} // Pastikan path video kedua benar
+          style={{ height: screenHeight, width: screenWidth }}
           resizeMode="cover"
           onError={(error) => console.error("Video Error:", error)}
-          onPlaybackStatusUpdate={onPlaybackStatusUpdate} // Check for when video finishes
+          onPlaybackStatusUpdate={onPlaybackStatusUpdate}
         />
 
-        <View
-          style={tw`absolute flex-row justify-between w-full h-1.5 mt-4 px-2`}
-        >
-          {/* Static background bars */}
+        {/* Progress bar */}
+        <View style={tw`absolute flex-row justify-between w-full h-1.5 mt-4 px-2`}>
           <View style={tw`flex-row w-full h-full`}>
-            <View style={tw`flex-1 bg-gray-300 mx-1 rounded-full`} />
-            <View style={tw`flex-1 bg-gray-300 mx-1 rounded-full`} />
+            <View style={tw`flex-1 bg-gray-300 mx-1 rounded-full`} >
+            <View
+                style={[
+                  tw`absolute left-0 h-full bg-red-600 rounded-full`,
+                  { width: `100%`, maxWidth: "100%" },
+                ]}
+              />
+            </View>
+            <View style={tw`flex-1 bg-gray-300 mx-1 rounded-full`} >
+              <View
+                style={[
+                  tw`absolute left-0 h-full bg-red-600 rounded-full`,
+                  { width: `${progress}%`, maxWidth: "100%" },
+                ]}
+              />
+            </View>
             <View style={tw`flex-1 bg-gray-300 mx-1 rounded-full`} />
             <View style={tw`flex-1 bg-gray-300 mx-1 rounded-full`} />
           </View>
-          {/* Moving red progress bar */}
-          <View
-            style={[
-              tw`absolute left-0 h-full bg-red-600 rounded-full`,
-              { width: `${progress / 4}%`, maxWidth: "100%" },
-            ]}
-          />
         </View>
 
-        {/* Play/Pause button on top of the video */}
-
-        {/* Slider and time controls under the video */}
+        {/* Slider dan kontrol waktu */}
         <View style={tw`absolute bottom-24 left-0 right-0 px-4`}>
-          {/* Time display */}
-          <View style={tw`flex-row justify-between mb-2 `}>
+          <View style={tw`flex-row justify-between mb-2`}>
             <Text style={tw`text-white`}>{formatTime(currentTime)}</Text>
             <Text style={tw`text-white`}>{formatTime(duration)}</Text>
           </View>
 
-          {/* Slider */}
           <Slider
             minimumValue={0}
             maximumValue={100}
@@ -122,9 +136,8 @@ const VideoMateriKeuanganII = () => {
             thumbTintColor="#BB1624"
             style={tw`w-full`}
           />
-          <View
-            style={tw`absolute top-0 left-0 right-0 items-start ml-7 mt-12`}
-          >
+
+          <View style={tw`absolute top-0 left-0 right-0 items-start ml-7 mt-12`}>
             <TouchableOpacity
               onPress={togglePlayPause}
               style={tw`flex-row items-center bg-red-600 py-2 px-4 rounded-lg`}

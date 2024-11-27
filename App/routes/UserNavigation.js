@@ -45,6 +45,12 @@ import ProgramSaya from "../listCourses/myCourses/ProgramSaya";
 import VentureCapital from "../listCourses/myCourses/module/VentureCapital";
 import VideoMateriKeuanganII from "../etc/Materi/SubabMateri/Keuangan/VideoMateriKeuanganII";
 import Roadmap from "../tabbottom/Roadmap";
+import EditAccount from "../Services/EditAccount";
+import ChangeLevel from "../listCourses/myCourses/changeLevel/ChangeLevel";
+import AccordionScreen from "../etc/accordionPage/AccordionScreen";
+import FondationI from "../etc/Kuis/level1/FondationI";
+import TujuanKeuangan from "../etc/Kuis/level1/TujuanKeuangan";
+import NilaiUang from "../etc/Kuis/level1/NilaiUang";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -100,7 +106,7 @@ const UserNavigation = () => {
         />
 
         <Tab.Screen
-          name="tugas"
+          name="leaderboard"
           component={News}
           options={{
             tabBarIcon: ({ focused }) => (
@@ -127,7 +133,7 @@ const UserNavigation = () => {
         
 
         <Tab.Screen
-          name="leaderboard"
+          name="reward"
           component={Tugas}
           options={{
             tabBarIcon: ({ focused }) => (
@@ -200,6 +206,12 @@ const UserNavigation = () => {
         <Stack.Screen name="ventureCapital" component={VentureCapital}/>
         <Stack.Screen name="videoKeuanganII" component={VideoMateriKeuanganII}/>
         <Stack.Screen name="roadmap" component={Roadmap}/>
+        <Stack.Screen name="editAccount" component={EditAccount}/>
+        <Stack.Screen name="changeLevel" component={ChangeLevel}/>
+        <Stack.Screen name="accordionScreen" component={AccordionScreen}/>
+        <Stack.Screen name="kuisFondationI" component={FondationI}/>
+        <Stack.Screen name="kuisTujuanKeuangan" component={TujuanKeuangan}/>
+        <Stack.Screen name="kuisNilaiUang" component={NilaiUang}/>
         
       </Stack.Navigator>
    

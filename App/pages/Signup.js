@@ -19,7 +19,7 @@ import {
   GoogleAuthProvider,
   signInWithCredential,
 } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { Ionicons } from "react-native-vector-icons";
 import tw from "twrnc";
 
@@ -36,12 +36,7 @@ const Signup = () => {
   };
 
   const register = async () => {
-    if (
-      fullname === "" ||
-      email === "" ||
-      password === "" ||
-      phoneNumber === ""
-    ) {
+    if (fullname === "" || email === "" || password === "" || phoneNumber === "") {
       Alert.alert("Invalid Details", "Please fill all the details");
     } else {
       if (password.length < 6) {
@@ -58,30 +53,46 @@ const Signup = () => {
           );
           const user = userCredential.user;
           const myUserUid = user.uid;
-
+  
+          // Menyimpan data pengguna baru ke Firestore dengan status survei dan modul awal
           await setDoc(doc(db, "users", myUserUid), {
             fullname: fullname,
             email: email,
             phoneNumber: phoneNumber,
             scores: {},
             role: "user",
+            hasCompletedSurvey: false, // Tambahkan status survei bisnis
+            coursesJoined: [1], // Otomatis tambahkan modul "Dasar Keuangan Bisnis" (ID = 1)
+            createdAt: new Date().toISOString(),
           });
-
+  
           console.log("User data saved successfully");
-          navigation.replace("MainApp");
+  
+          // Periksa apakah pengguna sudah menyelesaikan survei bisnis
+          const userDocRef = doc(db, "users", myUserUid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists() && userDoc.data().hasCompletedSurvey === false) {
+            // Jika belum, arahkan ke halaman survei bisnis
+            navigation.replace("bisnisSurvey");
+          } else {
+            // Jika sudah, arahkan ke halaman utama aplikasi
+            navigation.replace("MainApp");
+          }
         } catch (error) {
           Alert.alert("Registration Failed", error.message);
         }
       }
     }
   };
+  
+
 
   const signInWithGoogle = async () => {
     try {
       const result = await Google.logInAsync({
-        androidClientId: "<YOUR_ANDROID_CLIENT_ID>",
-        iosClientId: "<YOUR_IOS_CLIENT_ID>",
-        scopes: ["profile", "email"],
+        androidClientId: '826300876657-lk3bji4sc7sj7i7iptdcs5eqehnmkbg7.apps.googleusercontent.com',
+        iosClientId: '826300876657-lk3bji4sc7sj7i7iptdcs5eqehnmkbg7.apps.googleusercontent.com', // Jika Anda menggunakan iOS
+        expoClientId: '826300876657-lk3bji4sc7sj7i7iptdcs5eqehnmkbg7.apps.googleusercontent.com',
       });
 
       if (result.type === "success") {

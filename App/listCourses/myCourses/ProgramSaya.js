@@ -15,6 +15,7 @@ import { useNavigation } from "@react-navigation/native";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../../../firebase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LinearGradient } from "expo-linear-gradient";
 
 const ProgramSaya = () => {
   const [userId, setUserId] = useState(null);
@@ -99,8 +100,9 @@ const ProgramSaya = () => {
   });
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-white`}>
+    <SafeAreaView style={tw`flex-1`}>
       <StatusBar backgroundColor="white" barStyle="dark-content" />
+      <LinearGradient colors={['#BB1624', '#FCFCFCFF']} style={tw`flex-1`} >
 
       <ScrollView
         contentContainerStyle={tw`p-5`}
@@ -112,47 +114,12 @@ const ProgramSaya = () => {
           style={tw`flex-row items-center mt-10 mb-2  pb-2`}
         >
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color="#505050FF" />
+            <Ionicons name="arrow-back" size={24} color="#F3F0F0FF" />
           </TouchableOpacity>
           <View style={tw`flex-1 items-center`}>
-            <Text style={tw`text-lg text-gray-700`}>Lesson Saya</Text>
+            <Text style={tw`text-lg text-gray-100`}>Explore Lesson</Text>
           </View>
         </View>
-
-        <View style={tw`flex-row justify-around mb-4 mt-4 bg-gray-200 rounded-xl p-1`}>
-      <TouchableOpacity
-        style={tw`flex-1 items-center py-2 rounded-lg ${
-          filter === "all" ? "bg-[#BB1624]" : ""
-        }`}
-        onPress={() => setFilter("all")}
-      >
-        <Text style={tw`${filter === "all" ? "text-white" : "text-gray-500"}`}>
-          All
-        </Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity
-        style={tw`flex-1 items-center py-2 rounded-lg ${
-          filter === "inProgress" ? "bg-[#BB1624]" : ""
-        }`}
-        onPress={() => setFilter("inProgress")}
-      >
-        <Text style={tw`${filter === "inProgress" ? "text-white" : "text-gray-500"}`}>
-          In Progress
-        </Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity
-        style={tw`flex-1 items-center py-2 rounded-lg ${
-          filter === "completed" ? "bg-[#BB1624]" : ""
-        }`}
-        onPress={() => setFilter("completed")}
-      >
-        <Text style={tw`${filter === "completed" ? "text-white" : "text-gray-500"}`}>
-          Completed
-        </Text>
-      </TouchableOpacity>
-    </View>
 
         {filteredCourses.length === 0 ? (
           <Text style={tw`text-gray-500 mt-4`}>
@@ -164,43 +131,63 @@ const ProgramSaya = () => {
             return (
               <TouchableOpacity
                 key={index}
-                style={tw`bg-white rounded-xl p-4 shadow-lg mb-4 flex-row`}
                 onPress={() =>
-                  navigation.navigate("ventureCapital", {
+                  navigation.navigate("roadmap", {
                     courseId: course.courseId,
                   })
                 }
               >
-                <Image source={course.image} style={tw`w-20 h-20 rounded-lg`} />
-                <View style={tw`ml-4 flex-1`}>
-                  <Text style={tw`text-sm text-[#BB1624]`}>
-                    {course.category}
-                  </Text>
-                  <Text style={tw`text-base font-bold mt-1`}>
+              <LinearGradient
+              colors={['#BB1624', '#53060CFF']} // Gradient colors
+              start={{ x: 0, y: 0 }} // Start point of the gradient
+              end={{ x: 1, y: 1 }}   // End point of the gradient
+              style={[
+                tw`p-4 rounded-xl mt-4`, // Tailwind styles
+                {
+                  shadowColor: '#000000', // Shadow color
+                  shadowOffset: { width: 3, height: 12 }, // Shadow offset
+                  shadowOpacity: 0.3, // Shadow opacity
+                  shadowRadius: 2.84, // Shadow radius
+                  elevation: 8, // Android shadow
+                },
+              ]}
+            >
+                <View style={tw`flex-row `}>
+                <Image
+                  source={require('./../../assets/logoAssets/rina3.png')}
+                  style={tw`w-32 `} // Tambahkan ukuran untuk memastikan gambar tidak terlalu besar
+                  resizeMode="contain"
+                />
+                <View style={tw`flex-1 mt-4`}>
+                  <Text style={tw`text-lg font-bold text-white`}>
                     {course.title}
                   </Text>
-                  <Text style={tw`text-sm text-gray-500`}>
-                    {course.totalModules} Modules
+                  <Text style={tw`text-sm text-white mt-2`}>
+                   Sukses butuh perjuangan, jangan sendirian. Rina siap menemani, ayo lanjutkan belajar!
                   </Text>
-                  <View style={tw`mt-2`}>
-                    <Text style={tw`text-sm text-gray-500`}>
-                      Complete {Math.floor(completedPercentage)}%
-                    </Text>
-                    <View style={tw`w-full h-2 bg-gray-300 rounded-full mt-1`}>
-                      <View
-                        style={[
-                          tw`h-full bg-[#BB1624] rounded-full`,
-                          { width: `${completedPercentage}%` },
-                        ]}
-                      />
-                    </View>
+                  <View style={tw`flex-row items-center gap-4 justify-end mt-4`}>
+                    <Text style={tw`text-xs text-gray-200`}>Lanjut Belajar</Text>
+                    <TouchableOpacity
+                      onPress={() => navigation.navigate('programList')}
+                      style={tw`bg-white p-1 flex items-center rounded-full`}
+                    >
+                      <Ionicons name="play" size={20} color="#BB1624" />
+                    </TouchableOpacity>
                   </View>
                 </View>
+              </View>
+              </LinearGradient>
+
+              
               </TouchableOpacity>
+
+              
             );
           })
         )}
+        
       </ScrollView>
+      </LinearGradient>
     </SafeAreaView>
   );
 };

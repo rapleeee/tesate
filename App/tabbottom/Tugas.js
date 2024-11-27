@@ -1,442 +1,248 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, Modal, StyleSheet, Linking } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import tw from 'twrnc';
-import Icon from 'react-native-vector-icons/Ionicons';
+import React, { useState, useEffect } from "react";
+import {View, Text, ScrollView, Image, TouchableOpacity, Alert, ImageBackground, RefreshControl,} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "react-native-vector-icons";
+import tw from "twrnc";
+import { db, auth } from "../../firebase";
+import { collection, onSnapshot, doc, getDoc, updateDoc } from "firebase/firestore";
 
-const Tugas = () => {
-  const navigation = useNavigation();
-  const [isModalVisible, setModalVisible] = useState(false);
-  const [taskType, setTaskType] = useState(null);
-  const [coins, setCoins] = useState(200);
-  const [dailyTaskCompleted, setDailyTaskCompleted] = useState(false);
-  const [weeklyTaskCompleted, setWeeklyTaskCompleted] = useState(false);
-  const [isRedeemModalVisible, setRedeemModalVisible] = useState(false);
+export default function Tugas({ navigation }) {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [xp, setXp] = useState(0); // XP Harian
+  const [coins, setCoins] = useState(0);
+  const [isTopThree, setIsTopThree] = useState(false);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [currentUserPosition, setCurrentUserPosition] = useState(null);
+  const [studyTime, setStudyTime] = useState(0);
+  const [quizAnswersCorrect, setQuizAnswersCorrect] = useState(0);
 
-  const [dailyTimeLeft, setDailyTimeLeft] = useState(null);
-  const [weeklyTimeLeft, setWeeklyTimeLeft] = useState(null);
+  useEffect(() => {
+    fetchLeaderboard();
+    fetchUserData();
+    monitorStudyTime();
+  }, []);
 
-  const dailyResetTime = 10;
-  const weeklyResetTime = 60;
+  const fetchLeaderboard = () => {
+    const unsubscribe = onSnapshot(collection(db, "users"), (snapshot) => {
+      const usersList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        totalScore: doc.data().scores ? Object.values(doc.data().scores).reduce((a, b) => a + b, 0) : 0,
+      }));
 
-  const toggleModal = (type) => {
-    setTaskType(type);
-    setModalVisible(true); // Ensure modal is shown when task is selected
+      const sortedUsers = usersList.sort((a, b) => b.totalScore - a.totalScore).slice(0, 10);
+      setLeaderboard(sortedUsers);
+
+      const currentUser = auth.currentUser;
+      const position = sortedUsers.findIndex((user) => user.id === currentUser?.uid);
+      setCurrentUserPosition(position + 1);
+      setIsTopThree(position >= 0 && position < 3);
+    });
+
+    return () => unsubscribe();
   };
 
-  const toggleRedeemModal = () => {
-    setRedeemModalVisible(true); // Open redeem modal
+  const fetchUserData = async () => {
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const today = new Date().toISOString().split("T")[0];
+
+          setXp(userData.dailyXP?.date === today ? userData.dailyXP.xpEarned : 0);
+          setCoins(userData.coins || 0);
+          setQuizAnswersCorrect(userData.dailyQuiz?.correctAnswers || 0);
+          setStudyTime(userData.studyTime?.date === today ? userData.studyTime.minutes : 0);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
   };
 
-  const formatTime = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const sec = seconds % 60;
-    return `${minutes}:${sec < 10 ? '0' : ''}${sec}`;
-  };
-
-  const completeDailyTask = () => {
-    if (!dailyTaskCompleted) {
-      setCoins(coins + 50);
-      setDailyTaskCompleted(true);
-      setDailyTimeLeft(dailyResetTime);
-      alert('Tantangan Harian selesai! Anda mendapatkan 50 koin.');
-      setModalVisible(false);
-
-      const dailyInterval = setInterval(() => {
-        setDailyTimeLeft((time) => {
-          if (time === 1) {
-            clearInterval(dailyInterval);
-            setDailyTaskCompleted(false);
-            return null;
+  const monitorStudyTime = () => {
+    const user = auth.currentUser;
+    if (!user) return;
+  
+    const userDocRef = doc(db, "users", user.uid);
+  
+    const startTimer = async () => {
+      const today = new Date().toISOString().split("T")[0];
+      try {
+        // Fetch current study time or initialize if not set
+        const userDoc = await getDoc(userDocRef);
+        let currentMinutes = 0;
+  
+        if (userDoc.exists()) {
+          const studyTime = userDoc.data().studyTime;
+          if (studyTime?.date === today) {
+            currentMinutes = studyTime.minutes;
           }
-          return time - 1;
-        });
-      }, 1000);
-    } else {
-      alert('Tantangan Harian sedang menunggu reset.');
-    }
-  };
-
-  const completeWeeklyTask = () => {
-    if (!weeklyTaskCompleted) {
-      setCoins(coins + 125);
-      setWeeklyTaskCompleted(true);
-      setWeeklyTimeLeft(weeklyResetTime);
-      alert('Tantangan Mingguan selesai! Anda mendapatkan 125 koin.');
-      setModalVisible(false);
-
-      const weeklyInterval = setInterval(() => {
-        setWeeklyTimeLeft((time) => {
-          if (time === 1) {
-            clearInterval(weeklyInterval);
-            setWeeklyTaskCompleted(false);
-            return null;
+        }
+  
+        // Start tracking study time
+        const interval = setInterval(async () => {
+          try {
+            currentMinutes += 1; // Increment study time by 1 minute
+            await updateDoc(userDocRef, {
+              studyTime: {
+                date: today,
+                minutes: currentMinutes,
+              },
+            });
+  
+            // Update state locally for immediate UI feedback
+            setStudyTime(currentMinutes);
+          } catch (error) {
+            console.error("Error updating study time:", error);
           }
-          return time - 1;
-        });
-      }, 1000);
+        }, 60000); // Increment every 1 minute
+  
+        return interval; // Return interval reference for cleanup
+      } catch (error) {
+        console.error("Error starting study time timer:", error);
+      }
+    };
+  
+    // Call startTimer and ensure cleanup on unmount
+    const interval = startTimer();
+    return () => clearInterval(interval);
+  };
+  
+  useEffect(() => {
+    const cleanup = monitorStudyTime();
+    return cleanup;
+  }, []);
+  
+
+  const handleClaimReward = async () => {
+    if (xp >= 30 && quizAnswersCorrect >= 10 && studyTime >= 5 && isTopThree) {
+      try {
+        const user = auth.currentUser;
+        if (user) {
+          const userDocRef = doc(db, "users", user.uid);
+          await updateDoc(userDocRef, {
+            xp: xp + 100,
+            coins: coins + 100,
+          });
+
+          Alert.alert("Selamat!", "Anda telah mengklaim hadiah 100 XP dan 100 coins!");
+          fetchUserData();
+        }
+      } catch (error) {
+        console.error("Error claiming reward:", error);
+      }
     } else {
-      alert('Tantangan Mingguan sedang menunggu reset.');
+      Alert.alert("Belum Bisa Klaim", "Pastikan semua tantangan selesai dan Anda berada di 3 besar leaderboard.");
     }
   };
 
-  // Fungsi untuk membuka link ketika "Daftar Sekarang" dipencet
-  const openWebinarLink = () => {
-    const webinarURL = 'https://google.com'; // Ganti dengan URL yang sesuai
-    Linking.openURL(webinarURL).catch((err) =>
-      console.error("Failed to open URL:", err)
-    );
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    fetchLeaderboard();
+    fetchUserData();
+    setTimeout(() => setIsRefreshing(false), 2000);
   };
-
-  const renderTaskModalContent = () => {
-    switch (taskType) {
-      case 'daily':
-        return (
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Tantangan Harian</Text>
-            <View style={styles.challengeBox}>
-              <Text style={styles.challengeText}>Dapatkan 30 XP</Text>
-              <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: '70%' }]} />
-              </View>
-            </View>
-            <View style={styles.challengeBox}>
-              <Text style={styles.challengeText}>Selesaikan 10 pertanyaan kuis</Text>
-              <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: '50%' }]} />
-              </View>
-            </View>
-            <View style={styles.challengeBox}>
-              <Text style={styles.challengeText}>Belajar selama 5 menit</Text>
-              <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: '30%' }]} />
-              </View>
-            </View>
-            <TouchableOpacity style={styles.completeButton} onPress={completeDailyTask}>
-              <Text style={styles.completeButtonText}>Selesaikan Daily Task</Text>
-            </TouchableOpacity>
-          </View>
-        );
-      case 'weekly':
-        return (
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Tantangan Mingguan</Text>
-            <View style={styles.challengeBox}>
-              <Text style={styles.challengeText}>Dapatkan 125 XP</Text>
-              <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: '70%' }]} />
-              </View>
-            </View>
-            <View style={styles.challengeBox}>
-              <Text style={styles.challengeText}>Selesaikan 50 pertanyaan kuis</Text>
-              <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: '50%' }]} />
-              </View>
-            </View>
-            <View style={styles.challengeBox}>
-              <Text style={styles.challengeText}>Belajar selama 30 menit</Text>
-              <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: '30%' }]} />
-              </View>
-            </View>
-            <TouchableOpacity style={styles.completeButton} onPress={completeWeeklyTask}>
-              <Text style={styles.completeButtonText}>Selesaikan Weekly Task</Text>
-            </TouchableOpacity>
-          </View>
-        );
-      case 'newYear':
-        return (
-          <View style={styles.newYearModalContent}>
-            <Text style={styles.newYearTitle}>Tantangan</Text>
-            <Text style={styles.newYearSubtitle}>Tahun Baru</Text>
-            <View style={styles.newYearDescriptionBox}>
-              <Text style={styles.newYearDescription}>
-                Ikuti Webinar Perencanaan Keuangan untuk memulai tahun baru dengan baik! {"\n\n"}
-                Pelajari cara mengatur anggaran, meningkatkan pendapatan, dan strategi investasi untuk bisnis Anda.
-              </Text>
-            </View>
-            <Text style={styles.newYearSteps}>
-              Cara Berpartisipasi: {"\n"}
-              1. Daftar Sekarang {"\n"}
-              2. Catat Tanggal dan Waktu {"\n"}
-              3. Ikuti Webinar Secara Online. {"\n"}
-            </Text>
-            <Text style={styles.newYearReward}>
-              Reward: {"\n"} • Sertifikat partisipasi
-            </Text>
-            <TouchableOpacity style={styles.newYearCTAButton} onPress={openWebinarLink}>
-              <Text style={styles.newYearCTAButtonText}>Daftar Sekarang!</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.newYearCloseButton}>
-              <Icon name="close-circle" size={30} color="#fff" />
-            </TouchableOpacity>
-          </View>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
-    <SafeAreaView style={tw`bg-white`}>
-      <ScrollView>
-        <View style={tw`relative mt-4`}>
-          <Image
-            source={require('./../assets/AkunPage/Promotion.png')}
-            style={tw`w-full h-50 mb-15`}
-            resizeMode="stretch"
-          />
-          <TouchableOpacity onPress={() => navigation.goBack()} style={tw`p-2`}>
-            <Icon name="chevron-back" size={30} color="#000" />
-          </TouchableOpacity>
-          <View style={tw`absolute w-full items-center top-10`}>
-            <Text style={tw`text-white text-lg`}>Current Coins</Text>
-            <Text style={tw`text-white text-4xl font-bold mt-2`}>{coins}</Text>
-            <Image source={require('./../assets/tugasPage/coin.png')} style={tw`w-10 h-10 mt-2`} />
-            <TouchableOpacity style={tw`bg-yellow-400 rounded-full py-2 px-4 mt-4`}>
-              <Text style={tw`text-yellow-900 font-bold`}>Ambassador Elite</Text>
-            </TouchableOpacity>
-            <Text style={tw`text-black mt-2`}>Ikuti tantangan dan dapatkan hadiahnya!</Text>
-          </View>
-        </View>
-
-        {/* Task Sections */}
-        <View style={tw`flex-1 p-4`}>
-          {/* Daily Task */}
-          <View style={tw`bg-gray-200 p-4 rounded-lg flex-row justify-between items-center`}>
-            <View style={tw`flex-row items-center`}>
-              <Text style={tw`text-lg font-bold`}>Daily Task</Text>
-              <Text style={tw`ml-2 text-blue-600`}>XP 50</Text>
-              <Image source={require('./../assets/tugasPage/coin.png')} style={tw`ml-2 w-6 h-6`} />
-            </View>
-            {dailyTaskCompleted ? (
-              <Text style={tw`text-red-600`}>
-                Menunggu: {dailyTimeLeft !== null ? formatTime(dailyTimeLeft) : ''}
-              </Text>
-            ) : (
-              <TouchableOpacity style={tw`bg-red-600 rounded-full py-2 px-4`} onPress={() => toggleModal('daily')}>
-                <Text style={tw`text-white text-lg`}>Start</Text>
+    <SafeAreaView style={tw`flex-1 bg-gray-100 `}>
+      <ScrollView refreshControl={
+        <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+      }>
+        <View style={tw`relative `}>
+          <ImageBackground source={require("./../assets/AkunPage/cardAcc.png")} style={tw`w-full h-55`}>
+            <View style={tw`items-center justify-between flex-row p-6`}>
+              <TouchableOpacity onPress={() => navigation.goBack()}>
+                <Ionicons name="arrow-back" size={20} color="white" />
               </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Weekly Task */}
-          <View style={tw`bg-gray-200 p-4 rounded-lg flex-row justify-between items-center mt-4`}>
-            <View style={tw`flex-row items-center`}>
-              <Text style={tw`text-lg font-bold`}>Weekly Task</Text>
-              <Text style={tw`ml-2 text-blue-600`}>XP 125</Text>
-              <Image source={require('./../assets/tugasPage/coin.png')} style={tw`ml-2 w-6 h-6`} />
+              <Text style={tw`text-white text-xl`}>Reward</Text>
+              <Ionicons name="information-circle-outline" size={24} color="white" />
             </View>
-            {weeklyTaskCompleted ? (
-              <Text style={tw`text-red-600`}>
-                Menunggu: {weeklyTimeLeft !== null ? formatTime(weeklyTimeLeft) : ''}
-              </Text>
-            ) : (
-              <TouchableOpacity style={tw`bg-red-600 rounded-full py-2 px-4`} onPress={() => toggleModal('weekly')}>
-                <Text style={tw`text-white text-lg`}>Start</Text>
-              </TouchableOpacity>
-            )}
-          </View>
 
-          {/* New Year Task */}
-          <View style={tw`bg-blue-100 p-4 rounded-lg flex-row justify-between items-center mt-6`}>
-            <View style={tw`flex-row items-center`}>
-              <Text style={tw`text-lg font-bold`}>New Year Task</Text>
-              <Text style={tw`ml-2 text-yellow-600`}>Reward: Sertifikat</Text>
-            </View>
-            <TouchableOpacity style={tw`bg-yellow-600 rounded-full py-2 px-4`} onPress={() => toggleModal('newYear')}>
-              <Text style={tw`text-white text-lg`}>Join</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Redeem Section */}
-          <View style={tw`bg-gray-200 p-4 rounded-lg flex-row justify-between items-center mt-6`}>
-            <View style={tw`flex-row items-center`}>
-              <Text style={tw`text-lg font-bold`}>Education</Text>
-            </View>
-            <TouchableOpacity style={tw`bg-red-600 rounded-full py-2 px-4`} onPress={toggleRedeemModal}>
-              <Text style={tw`text-white text-lg`}>Redeem</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Redeem Modal */}
-        <Modal visible={isRedeemModalVisible} animationType="slide" transparent={true}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.redeemModalContent}>
-              <TouchableOpacity onPress={() => setRedeemModalVisible(false)} style={styles.redeemCloseButton}>
-                <Icon name="close-circle" size={30} color="#fff" />
-              </TouchableOpacity>
-
-              {/* Redeem Content */}
-              <View style={styles.redeemContentBox}>
-                <Text style={styles.redeemTitle}>Diskon 25% Subscription Saraya</Text>
-                <Text style={styles.redeemDescription}>
-                  Dapatkan diskon eksklusif 25% untuk langganan Saraya Anda! Gunakan kupon ini untuk mengembangkan bisnis Anda.
-                </Text>
+            <View style={[tw`mx-18 p-4 rounded-lg flex-row items-center justify-center`, { backgroundColor: 'rgba(250, 250, 250, 0.1)' }]}>
+              <View style={tw`items-center flex justify-center`}>
+                <Text style={tw`text-[#E1BF8F] text-xs`}>Koin Kamu</Text>
+                <View style={tw`flex-row items-center justify-center gap-2`}>
+                  <Text style={tw`text-gray-200 text-3xl`}>{coins}</Text>
+                  <Image source={require("./../assets/homePage/coins.png")} style={tw`w-6 h-6`} />
+                </View>
               </View>
+            </View>
 
-              <TouchableOpacity style={styles.redeemCTAButton}>
-                <Text style={styles.redeemCTAButtonText}>Redeem Sekarang!</Text>
+            <TouchableOpacity
+              style={tw`items-center justify-center bg-[#EF980C] p-2 mt--4 mx-34 rounded-lg z-10`}
+              onPress={handleClaimReward}
+            >
+              <Text style={tw`text-gray-200 text-xs`}>Klaim Hadiah</Text>
+            </TouchableOpacity>
+
+            <Text style={tw`text-gray-300 text-xs m-2 text-center`}>
+              Ikuti tantangan dan dapatkan hadiahnya!
+            </Text>
+          </ImageBackground>
+        </View>
+
+        <View style={tw`flex-1 p-4 m-4 rounded-lg bg-[#FFB8B8] shadow-md`}>
+          <View style={tw`flex-row items-center justify-between mb-4`}>
+            <Text style={tw`text-gray-700 text-base`}>Tantangan Harian</Text>
+            <View style={tw`flex-row items-center justify-between gap-2`}>
+              <View style={tw`flex-row items-center`}>
+                <Image source={require("./../assets/homePage/XP1.png")} style={tw`w-8 h-8`} />
+                <Text style={tw`text-gray-700 text-sm`}>100</Text>
+              </View>
+              <View style={tw`flex-row items-center`}>
+                <Image source={require("./../assets/homePage/coins.png")} style={tw`w-8 h-8`} />
+                <Text style={tw`text-gray-700 text-sm`}>100</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Daily Challenges */}
+          <View style={tw`p-4 bg-white rounded-lg shadow-md`}>
+            <Text>Dapatkan 30 XP</Text>
+            <View style={tw`w-full bg-gray-300 rounded-full h-3 mt-2`}>
+              <View style={tw`bg-[#BB1624] h-full rounded-full`} width={`${(xp / 30) * 100}%`} />
+            </View>
+          </View>
+
+          <View style={tw`p-4 bg-white rounded-lg shadow-md mt-4`}>
+            <Text>Jawab 10 Pertanyaan Benar</Text>
+            <View style={tw`w-full bg-gray-300 rounded-full h-3 mt-2`}>
+              <View style={tw`bg-[#BB1624] h-full rounded-full`} width={`${(quizAnswersCorrect / 10) * 100}%`} />
+            </View>
+          </View>
+          <View style={tw`p-4 bg-white rounded-lg shadow-md mt-4`}>
+            <Text>Belajar Selama 5 Menit</Text>
+            <View style={tw`w-full bg-gray-300 rounded-full h-3 mt-2`}>
+              <View style={tw`bg-[#BB1624] h-full rounded-full`} width={`${(studyTime / 5) * 100}%`} />
+            </View>
+          </View>
+        </View>
+
+        <View style={tw`flex-1 p-4 m-4 rounded-lg bg-[#FFB8B8] shadow-md mb-12`}>
+          <View style={tw`flex-row items-center justify-between`}>
+            <Text style={tw`text-gray-700 text-base`}>Kuis Mingguan</Text>
+            <View style={tw`flex-row items-center justify-between gap-4`}>
+              <View style={tw`flex-row items-center`}>
+                <Image source={require("./../assets/homePage/XP1.png")} style={tw`w-8 h-8`} />
+                <Text style={tw`text-gray-700 text-sm`}>150</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={tw`p-2 bg-white rounded-lg mt-4 shadow-md`}>
+            <View style={tw`flex-row items-center justify-between`}>
+              <Text style={tw`text-gray-700 text-sm`}>Ikut kuis, dapatkan tambahan XP</Text>
+              <TouchableOpacity style={tw`bg-[#BB1624] rounded-xl px-4 py-2 flex-row gap-2 items-center`}>
+                <Image source={require("./../assets/homePage/coins.png")} style={tw`w-6 h-6`} />
+                <Text style={tw`text-white text-sm`}>10</Text>
               </TouchableOpacity>
             </View>
           </View>
-        </Modal>
-
-        {/* Task Modals */}
-        <Modal visible={isModalVisible} animationType="slide" transparent={true}>
-          <View style={styles.modalOverlay}>
-            {renderTaskModalContent()}
-          </View>
-        </Modal>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
-};
-
-const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    width: '90%',
-    padding: 20,
-    backgroundColor: '#1D3557',
-    borderRadius: 15,
-    position: 'relative',
-    alignItems: 'center',
-  },
-  challengeBox: {
-    backgroundColor: '#FDCB6E',
-    width: '100%',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  challengeText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  progressBar: {
-    width: '100%',
-    height: 10,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 5,
-    marginTop: 5,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#FAB005',
-    borderRadius: 5,
-  },
-  completeButton: {
-    backgroundColor: '#00e676',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    marginTop: 20,
-  },
-  completeButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  newYearModalContent: {
-    width: '90%',
-    padding: 20,
-    backgroundColor: '#E5F3FE',
-    borderRadius: 20,
-    alignItems: 'center',
-  },
-  newYearTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#305F72',
-  },
-  newYearSubtitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#305F72',
-    marginBottom: 20,
-  },
-  newYearDescriptionBox: {
-    backgroundColor: '#F1F9FF',
-    width: '100%',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 20,
-  },
-  newYearDescription: {
-    fontSize: 16,
-    color: '#1D3557',
-    textAlign: 'center',
-  },
-  newYearSteps: {
-    fontSize: 16,
-    color: '#1D3557',
-    marginBottom: 20,
-  },
-  newYearReward: {
-    fontSize: 16,
-    color: '#1D3557',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  newYearCTAButton: {
-    backgroundColor: '#00B4D8',
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 10,
-  },
-  newYearCTAButtonText: {
-    fontSize: 16,
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  newYearCloseButton: {
-    position: 'absolute',
-    top: -20,
-    right: -20,
-  },
-  redeemModalContent: {
-    width: '90%',
-    padding: 20,
-    backgroundColor: '#FBE9E7',
-    borderRadius: 20,
-    alignItems: 'center',
-  },
-  redeemTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#D84315',
-  },
-  redeemDescription: {
-    fontSize: 16,
-    color: '#BF360C',
-    textAlign: 'center',
-    marginVertical: 20,
-  },
-  redeemCTAButton: {
-    backgroundColor: '#E64A19',
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 10,
-  },
-  redeemCTAButtonText: {
-    fontSize: 16,
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  redeemCloseButton: {
-    position: 'absolute',
-    top: -20,
-    right: -20,
-  },
-});
-
-export default Tugas;
+}

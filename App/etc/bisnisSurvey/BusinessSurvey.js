@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { auth, db } from '../../../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 
-export default function BusinessSurvey() {
+export default function BusinessSurvey({ route }) {
   const navigation = useNavigation();
   const [step, setStep] = useState(0);
   const [businessName, setBusinessName] = useState('');
@@ -17,6 +17,7 @@ export default function BusinessSurvey() {
   const [userUID, setUserUID] = useState('');
   const [fullname, setFullname] = useState('');
   const [hasSurvey, setHasSurvey] = useState(false);
+  const [viewOnly, setViewOnly] = useState(route.params?.viewOnly || false); // New parameter to indicate view mode
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -38,10 +39,12 @@ export default function BusinessSurvey() {
         setFullname(userData.fullname || '');
         setHasSurvey(userData.hasCompletedSurvey || false);
 
-        if (userData.hasCompletedSurvey) {
+        // Only redirect if the user is not in view mode and has completed the survey
+        if (userData.hasCompletedSurvey && !viewOnly) {
           navigation.navigate('MainApp');
         }
 
+        // Populate fields if survey data exists
         if (userData.businessName) {
           setBusinessName(userData.businessName);
           setBusinessField(userData.businessField);
@@ -113,7 +116,8 @@ export default function BusinessSurvey() {
     }
   };
 
-  if (hasSurvey) {
+  // If survey is completed and viewOnly is true, show survey details
+  if (hasSurvey && viewOnly) {
     return (
       <SafeAreaView style={tw`flex-1 bg-white`}>
         <Image source={require("./../../assets/LoginPage/Logo.png")} style={tw`h-25 w-25 self-center mt-10`} />
@@ -135,7 +139,7 @@ export default function BusinessSurvey() {
           </View>
 
           <View style={tw`flex-row justify-between w-full mt-6`}>
-            <TouchableOpacity style={tw`flex-1 bg-[#BB1624] py-3 px-6 rounded-full mr-2`} onPress={() => setStep(1)}>
+            <TouchableOpacity style={tw`flex-1 bg-[#BB1624] py-3 px-6 rounded-full mr-2`} onPress={() => { setStep(1); setViewOnly(false); }}>
               <Text style={tw`text-white text-center font-bold`}>Isi Survey Kembali</Text>
             </TouchableOpacity>
             <TouchableOpacity style={tw`flex-1 bg-gray-500 py-3 px-6 rounded-full ml-2`} onPress={() => navigation.navigate("MainApp")}>
@@ -151,7 +155,6 @@ export default function BusinessSurvey() {
     <SafeAreaView style={tw`flex-1 bg-white`}>
       <Image source={require("./../../assets/LoginPage/Logo.png")} style={tw`h-25 w-25 self-center mt-20`} />
       <ScrollView contentContainerStyle={tw`flex-1 justify-center items-center p-6`}>
-        
         {step === 0 ? (
           <View style={tw`items-center mb-6`}>
             <Text style={tw`text-xl font-bold mt-4 text-center`}>Selamat datang di Saraya, {fullname}</Text>
@@ -159,7 +162,7 @@ export default function BusinessSurvey() {
               Mari kita mulai untuk mempersiapkan konten pilihan sesuai dengan kebutuhan kamu!
             </Text>
             <TouchableOpacity
-              style={tw`bg-red-500 py-3 px-6 rounded-full mt-4`}
+              style={tw`bg-[#BB1624] py-3 px-6 rounded-full mt-4`}
               onPress={() => setStep(1)}
             >
               <Text style={tw`text-white text-center font-bold`}>Mulai Sekarang!</Text>
@@ -179,75 +182,73 @@ export default function BusinessSurvey() {
               </View>
             )}
 
-        {step === 2 && (
-          <View style={tw`w-full`}>
-            <Text style={tw`text-lg mb-2 font-bold`}>Bidang Bisnis</Text>
-            {[
-              "Makanan/Minuman",
-              "Pakaian",
-              "Kerajinan",
-              "Retail",
-              "Lainnya",
-            ].map((field) => (
-              <TouchableOpacity
-                key={field}
-                style={[
-                  tw`p-3 rounded-lg mb-2 border`,
-                  businessField === field
-                    ? tw`bg-red-500 border-red-500`
-                    : tw`border-gray-300`,
-                ]}
-                onPress={() => setBusinessField(field)}
-              >
-                <Text
-                  style={tw`text-center ${
-                    businessField === field ? "text-white" : "text-black"
-                  }`}
-                >
-                  {field}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
+            {step === 2 && (
+              <View style={tw`w-full`}>
+                <Text style={tw`text-lg mb-2 font-bold`}>Bidang Bisnis</Text>
+                {[
+                  "Makanan/Minuman",
+                  "Pakaian",
+                  "Kerajinan",
+                  "Retail",
+                  "Lainnya",
+                ].map((field) => (
+                  <TouchableOpacity
+                    key={field}
+                    style={[
+                      tw`p-3 rounded-lg mb-2 border`,
+                      businessField === field
+                        ? tw`bg-[#BB1624] border-[#BB1624]`
+                        : tw`border-gray-300`,
+                    ]}
+                    onPress={() => setBusinessField(field)}
+                  >
+                    <Text
+                      style={tw`text-center ${businessField === field ? "text-white" : "text-black"
+                        }`}
+                    >
+                      {field}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
 
-        {step === 3 && (
-          <View style={tw`w-full`}>
-            <Text style={tw`text-lg mb-2 font-bold`}>
-              Tantangan Terbesar yang Dihadapi
-            </Text>
-            {[
-              "Manajemen Keuangan",
-              "Pemasaran",
-              "Operasional",
-              "Modal Usaha",
-              "Lainnya",
-            ].map((challenge) => (
-              <TouchableOpacity
-                key={challenge}
-                style={[
-                  tw`p-3 rounded-lg mb-2 border`,
-                  businessChallenge === challenge
-                    ? tw`bg-red-500 border-red-500`
-                    : tw`border-gray-300`,
-                ]}
-                onPress={() => setBusinessChallenge(challenge)}
-              >
-                <Text
-                  style={tw`text-center ${
-                    businessChallenge === challenge
-                      ? "text-white"
-                      : "text-black"
-                  }`}
-                >
-                  {challenge}
+            {step === 3 && (
+              <View style={tw`w-full`}>
+                <Text style={tw`text-lg mb-2 font-bold`}>
+                  Tantangan Terbesar yang Dihadapi
                 </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
+                {[
+                  "Manajemen Keuangan",
+                  "Pemasaran",
+                  "Operasional",
+                  "Modal Usaha",
+                  "Lainnya",
+                ].map((challenge) => (
+                  <TouchableOpacity
+                    key={challenge}
+                    style={[
+                      tw`p-3 rounded-lg mb-2 border`,
+                      businessChallenge === challenge
+                        ? tw`bg-[#BB1624] border-[#BB1624]`
+                        : tw`border-gray-300`,
+                    ]}
+                    onPress={() => setBusinessChallenge(challenge)}
+                  >
+                    <Text
+                      style={tw`text-center ${businessChallenge === challenge
+                          ? "text-white"
+                          : "text-black"
+                        }`}
+                    >
+                      {challenge}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
 
-        {step === 4 && (
+            {step === 4 && (
               <View style={tw`w-full`}>
                 <Text style={tw`text-lg mb-2 font-bold`}>
                   Apa jenis topik edukasi yang paling Anda butuhkan?
@@ -275,17 +276,16 @@ export default function BusinessSurvey() {
                       style={[
                         tw`w-[48%] p-3 rounded-lg mb-2 border`,
                         educationTopics.includes(topic)
-                          ? tw`bg-red-500 border-red-500`
+                          ? tw`bg-[#BB1624] border-[#BB1624]`
                           : tw`border-gray-300`,
                       ]}
                       onPress={() => handleEducationTopicSelect(topic)}
                     >
-                       <Text
-                        style={tw`text-center ${
-                          educationTopics.includes(topic)
+                      <Text
+                        style={tw`text-center ${educationTopics.includes(topic)
                             ? "text-white"
                             : "text-black"
-                        }`}
+                          }`}
                       >
                         {topic}
                       </Text>
@@ -310,15 +310,14 @@ export default function BusinessSurvey() {
                     style={[
                       tw`p-3 rounded-lg mb-2 border`,
                       financialSkill === level
-                        ? tw`bg-red-500 border-red-500`
+                        ? tw`bg-[#BB1624] border-[#BB1624]`
                         : tw`border-gray-300`,
                     ]}
                     onPress={() => setFinancialSkill(level)}
                   >
                     <Text
-                      style={tw`text-center ${
-                        financialSkill === level ? "text-white" : "text-black"
-                      }`}
+                      style={tw`text-center ${financialSkill === level ? "text-white" : "text-black"
+                        }`}
                     >
                       {level}
                     </Text>

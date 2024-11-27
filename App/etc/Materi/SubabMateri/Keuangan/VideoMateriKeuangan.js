@@ -6,13 +6,15 @@ import tw from "twrnc";
 import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import { useNavigation } from "@react-navigation/native";
+import { db, auth } from '../../../../../firebase'; // Sesuaikan path jika perlu
+import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 
 const VideoMateriKeuangan = () => {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0); // for the progress bar
-  const [currentTime, setCurrentTime] = useState(0); // current time of video
-  const [duration, setDuration] = useState(0); // duration of the video
+  const [progress, setProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const screenHeight = Dimensions.get("window").height;
   const screenWidth = Dimensions.get("window").width;
   const navigation = useNavigation();
@@ -46,14 +48,28 @@ const VideoMateriKeuangan = () => {
     }
   };
 
-  // Handler for when video finishes
-  const onPlaybackStatusUpdate = (status) => {
+  // Handler ketika video selesai diputar
+  const onPlaybackStatusUpdate = async (status) => {
     if (status.didJustFinish && !status.isLooping) {
-      navigation.navigate("videoKeuanganII"); // Navigate to next video when finished
+      // Perbarui data pengguna di Firestore untuk menandai modul 1 sebagai selesai
+      const user = auth.currentUser;
+      if (user) {
+        const userRef = doc(db, 'users', user.uid);
+        try {
+          await updateDoc(userRef, {
+            completedModules: arrayUnion(1), // Asumsikan id modul adalah 1
+          });
+          console.log('Modul 1 telah diselesaikan');
+        } catch (error) {
+          console.error('Error updating user data:', error);
+        }
+      }
+      // Navigasi ke video berikutnya
+      navigation.navigate('videoKeuanganII');
     }
   };
 
-  // Convert milliseconds to time format (mm:ss)
+  // Fungsi format waktu
   const formatTime = (timeMillis) => {
     const minutes = Math.floor(timeMillis / 1000 / 60);
     const seconds = Math.floor((timeMillis / 1000) % 60);
@@ -62,7 +78,6 @@ const VideoMateriKeuangan = () => {
       .padStart(2, "0")}`;
   };
 
-  // Seek video to the new position when progress bar is dragged
   const onSeek = async (value) => {
     const seekPosition = (value / 100) * duration;
     await videoRef.current.setPositionAsync(seekPosition);
@@ -71,15 +86,13 @@ const VideoMateriKeuangan = () => {
   return (
     <SafeAreaView style={tw`flex-1 bg-black`}>
       <View style={{ height: screenHeight }}>
-        {/* Video container */}
-
         <Video
           ref={videoRef}
-          source={require("../../../../assets/Video/Keuangan.mp4")  }
-          style={{ height: screenHeight, width: screenWidth }} // Fullscreen video
+          source={require("../../../../assets/moduleVideo/module1/video1_module_1.mp4")}
+          style={{ height: screenHeight, width: screenWidth }}
           resizeMode="cover"
           onError={(error) => console.error("Video Error:", error)}
-          onPlaybackStatusUpdate={onPlaybackStatusUpdate} // Check for when video finishes
+          onPlaybackStatusUpdate={onPlaybackStatusUpdate}
         />
 
         <View
@@ -87,18 +100,19 @@ const VideoMateriKeuangan = () => {
         >
           {/* Static background bars */}
           <View style={tw`flex-row w-full h-full`}>
-            <View style={tw`flex-1 bg-gray-300 mx-1 rounded-full`} />
+            <View style={tw`flex-1 bg-gray-300 mx-1 rounded-full`} >
+              <View
+                style={[
+                  tw`absolute left-0 h-full bg-red-600 rounded-full`,
+                  { width: `${progress }%`, maxWidth: "100%" },
+                ]}
+              />
+            </View>
             <View style={tw`flex-1 bg-gray-300 mx-1 rounded-full`} />
             <View style={tw`flex-1 bg-gray-300 mx-1 rounded-full`} />
             <View style={tw`flex-1 bg-gray-300 mx-1 rounded-full`} />
           </View>
           {/* Moving red progress bar */}
-          <View
-            style={[
-              tw`absolute left-0 h-full bg-red-600 rounded-full`,
-              { width: `${progress / 4}%`, maxWidth: "100%" },
-            ]}
-          />
         </View>
 
         {/* Play/Pause button on top of the video */}

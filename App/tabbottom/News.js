@@ -19,6 +19,7 @@ const calculateTimeUntilMidnight = () => {
 const News = ({ navigation }) => {
   const [users, setUsers] = useState([]);
   const [countdown, setCountdown] = useState(calculateTimeUntilMidnight()); 
+  const [currentMonth, setCurrentMonth] = useState('');
 
   // Mengambil data pengguna dari Firebase Firestore
   useEffect(() => {
@@ -29,6 +30,14 @@ const News = ({ navigation }) => {
       }));
       setUsers(userList);
     });
+
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    const date = new Date();
+    const month = monthNames[date.getMonth()];
+    setCurrentMonth(month);
 
     return () => unsubscribe();
   }, []);
@@ -64,46 +73,48 @@ const News = ({ navigation }) => {
     .slice(0, 10); // Batasi ke 10 besar
 
   return (
-    <SafeAreaView style={tw`flex-1`}>
-      <ImageBackground
-        source={require('./../assets/leaderboard/gradientbackground.png')} // Background gradient
-        style={tw`flex-1`}
-        resizeMode="cover"
-      >
+    <SafeAreaView style={[
+      tw`flex-1`,
+      { backgroundColor: 'rgba(255, 182, 182, 0.3)' } // Warna pink dengan opacity 30%
+    ]}
+    >
+      <View
+        
+        >
         <ScrollView>
           <StatusBar />
 
           <View style={tw`flex-row justify-between z-10 mt-4`}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={tw`left-5`}>
-              <Ionicons name="arrow-back" size={24} color="black" />
+              <Ionicons name="arrow-back" size={24} color="white" />
             </TouchableOpacity>
-            <Text style={tw`text-gray-800 text-base`}>Leaderboard</Text>
+            <Text style={tw`text-white text-base`}>Leaderboard</Text>
             <TouchableOpacity onPress={() => alert("Notifikasi")} style={tw`right-5`}>
-              <Ionicons name="information-circle-outline" size={24} color="black" />
+              <Ionicons name="information-circle-outline" size={24} color="white" />
             </TouchableOpacity>
           </View>
 
           {/* Bagian gambar leaderboard */}
           <View style={tw`relative mt-[-64]`}>
             <Image
-              source={require("./../assets/leaderboard/cardLeaderboard.png")} 
+              source={require("./../assets/leaderboard/cardhead.png")} 
               style={tw`w-full h-70 mb-15`}
               resizeMode="stretch"
             />
             <View style={tw`absolute w-full items-center mt-18`}>
               <Image source={require("./../assets/leaderboard/gold.png")} style={tw`w-24 h-24 mt-2`} />
-              <TouchableOpacity style={tw` mt-4`}>
-                <Text style={tw`text-yellow-900 text-xl`}>Ambassador Elite</Text>
-              </TouchableOpacity>
-              <Text style={tw`text-black mt-2`}>Masuk 10 besar untuk bertahan di level ini!</Text>
+              <View style={tw` mt-4`}>
+                <Text style={tw`text-white text-xl`}>{currentMonth}</Text>
+              </View>
+              <Text style={tw`text-white mt-2`}>Masuk 3 besar dan dapatkan hadiah!</Text>
             </View>
           </View>
 
           {/* Countdown waktu reset */}
-          <Text style={tw`text-gray-200 text-center mb-2 mt-[-52]`}>Reset dalam:</Text>
+          <Text style={tw`text-gray-700 text-center mb-2 mt-[-52]`}>Reset dalam:</Text>
           <View style={tw`flex-row justify-center items-center mb-5`}>
-            <Ionicons name="timer-outline" size={24} color="#E91E63" />
-            <Text style={tw`ml-2 text-lg text-pink-200`}>{formatTime(countdown)}</Text>
+            <Ionicons name="timer-outline" size={24} color="#BB1624" />
+            <Text style={tw`ml-2 text-lg text-[#BB1624]`}>{formatTime(countdown)}</Text>
           </View>
 
           {/* Leaderboard List */}
@@ -111,7 +122,7 @@ const News = ({ navigation }) => {
             {sortedUsers.map((user, index) => (
               <View
                 key={user.id}
-                style={tw`flex-row items-center p-3 rounded-xl mb-2 justify-between gap-4 bg-[rgba(128,128,128,0.3)]`}
+                style={tw`flex-row items-center p-2 rounded-2xl mb-2 justify-between gap-4 bg-[rgba(128,128,128,0.3)]`}
               >
                 {/* Ranking */}
                 {index + 1 <= 3 ? (
@@ -127,7 +138,7 @@ const News = ({ navigation }) => {
                   />
                 ) : (
                   <View style={tw`w-7 h-7 rounded-full items-center justify-center`}>
-                    <Text style={tw`text-sm text-white font-bold`}>{index + 1}</Text>
+                    <Text style={tw`text-sm text-gray-700 font-bold`}>{index + 1}</Text>
                   </View>
                 )}
 
@@ -141,17 +152,17 @@ const News = ({ navigation }) => {
                 </View>
 
                 {/* Nama Pengguna */}
-                <Text style={tw`flex-1 text-base text-white`}>{user.fullname || "-"}</Text>
+                <Text style={tw`flex-1 text-base text-gray-700`}>{user.fullname || "-"}</Text>
 
                 {/* Total XP yang disimpan */}
-                <Text style={tw`text-base text-white`}>
+                <Text style={tw`text-base text-gray-700`}>
                   {user.xp ? `${user.xp} XP` : "-"}  {/* Menampilkan XP yang tersimpan */}
                 </Text>
               </View>
             ))}
           </View>
         </ScrollView>
-      </ImageBackground>
+      </View>
     </SafeAreaView>
   );
 };

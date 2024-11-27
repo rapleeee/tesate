@@ -1,7 +1,7 @@
 export const reactMateriKeuangan = [
     {
-        Judul: "Pentingnya Laporan Keuangan",
-        subJudul: "Apa aja sih pentingnya Laporan Keuangan:",
+        Judul: "Dasar Keuangan Bisnis",
+        subJudul: "Mengapa Pemisahan Keuangan itu Penting? ",
         Poin:[
             "Mengukur Kinerja Keuangan: Laporan keuangan membantu UMKM untuk mengukur kinerja keuangan mereka dari waktu ke waktu. Dengan mengetahui pendapatan, biaya, dan keuntungan, UMKM dapat mengidentifikasi area yang memerlukan perbaikan.",
             "Membantu dalam Pengambilan Keputusan: Data dari laporan keuangan memberikan informasi yang diperlukan untuk membuat keputusan bisnis yang tepat, seperti menambah investasi, mengurangi biaya, atau memperluas operasi.",

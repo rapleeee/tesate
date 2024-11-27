@@ -1,18 +1,28 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet, TouchableOpacity } from 'react-native';
-import { auth } from '../../../../firebase'; // Pastikan jalur ke file firebase.js benar
+import { View, Text, TextInput, Alert, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { auth } from '../../../../firebase';
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
+import tw from 'twrnc';
+import { useNavigation } from '@react-navigation/native';
 
 export default function ChangePassword() {
+  const navigation = useNavigation();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
-  const [secureTextEntry, setSecureTextEntry] = useState(true);
+  const [secureTextEntry, setSecureTextEntry] = useState({
+    currentPassword: true,
+    newPassword: true,
+    confirmNewPassword: true,
+  });
 
-  const togglePasswordVisibility = () => {
-    setSecureTextEntry(!secureTextEntry);
+  const togglePasswordVisibility = (field) => {
+    setSecureTextEntry((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
   };
 
   const reauthenticate = async (currentPassword) => {
@@ -21,7 +31,7 @@ export default function ChangePassword() {
       const credential = EmailAuthProvider.credential(user.email, currentPassword);
       await reauthenticateWithCredential(user, credential);
     } catch (error) {
-      throw error; // Propagate error if reauthentication fails
+      throw error;
     }
   };
 
@@ -42,64 +52,80 @@ export default function ChangePassword() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Change Password</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Current Password"
-        value={currentPassword}
-        secureTextEntry={secureTextEntry}
-        onChangeText={(text) => setCurrentPassword(text)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="New Password"
-        value={newPassword}
-        secureTextEntry={secureTextEntry}
-        onChangeText={(text) => setNewPassword(text)}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Confirm New Password"
-        value={confirmNewPassword}
-        secureTextEntry={secureTextEntry}
-        onChangeText={(text) => setConfirmNewPassword(text)}
-      />
-      <TouchableOpacity onPress={togglePasswordVisibility} style={styles.icon}>
-        <Ionicons
-          name={secureTextEntry ? 'eye-off' : 'eye'}
-          size={24}
-          color="grey"
+    <SafeAreaView style={tw`flex-1 bg-white p-6`}>
+      <View style={tw`flex-row items-center mb-6`}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={tw`mr-4`}>
+          <Ionicons name="arrow-back" size={24} color="#BB1624" />
+        </TouchableOpacity>
+        <Text style={tw`text-2xl font-bold text-gray-800`}>Change Password</Text>
+      </View>
+
+      <View style={tw`mb-4`}>
+        <TextInput
+          style={tw`border border-gray-300 rounded-lg p-3 pr-10`}
+          placeholder="Current Password"
+          value={currentPassword}
+          secureTextEntry={secureTextEntry.currentPassword}
+          onChangeText={setCurrentPassword}
         />
+        <TouchableOpacity
+          onPress={() => togglePasswordVisibility('currentPassword')}
+          style={tw`absolute right-5 top-[50%] -mt-3`}
+        >
+          <Ionicons
+            name={secureTextEntry.currentPassword ? 'eye-off' : 'eye'}
+            size={24}
+            color="grey"
+          />
+        </TouchableOpacity>
+      </View>
+
+      <View style={tw`mb-4`}>
+        <TextInput
+          style={tw`border border-gray-300 rounded-lg p-3 pr-10`}
+          placeholder="New Password"
+          value={newPassword}
+          secureTextEntry={secureTextEntry.newPassword}
+          onChangeText={setNewPassword}
+        />
+        <TouchableOpacity
+          onPress={() => togglePasswordVisibility('newPassword')}
+          style={tw`absolute right-5 top-[50%] -mt-3`}
+        >
+          <Ionicons
+            name={secureTextEntry.newPassword ? 'eye-off' : 'eye'}
+            size={24}
+            color="grey"
+          />
+        </TouchableOpacity>
+      </View>
+
+      <View style={tw`mb-4`}>
+        <TextInput
+          style={tw`border border-gray-300 rounded-lg p-3 pr-10`}
+          placeholder="Confirm New Password"
+          value={confirmNewPassword}
+          secureTextEntry={secureTextEntry.confirmNewPassword}
+          onChangeText={setConfirmNewPassword}
+        />
+        <TouchableOpacity
+          onPress={() => togglePasswordVisibility('confirmNewPassword')}
+          style={tw`absolute right-5 top-[50%] -mt-3`}
+        >
+          <Ionicons
+            name={secureTextEntry.confirmNewPassword ? 'eye-off' : 'eye'}
+            size={24}
+            color="grey"
+          />
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity
+        style={tw`bg-[#BB1624] rounded-lg py-3 mt-6`}
+        onPress={handleChangePassword}
+      >
+        <Text style={tw`text-white text-center text-lg font-semibold`}>Change Password</Text>
       </TouchableOpacity>
-      <Button title="Change Password" onPress={handleChangePassword} />
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  input: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginBottom: 12,
-    paddingHorizontal: 8,
-    borderRadius: 5,
-  },
-  icon: {
-    alignSelf: 'flex-end',
-    marginRight: 16,
-    marginBottom: 12,
-  },
-});

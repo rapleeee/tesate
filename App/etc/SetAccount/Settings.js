@@ -178,7 +178,7 @@ export default function Settings() {
       </ScrollView>
 
       {/* Edit User Details Modal */}
-      <Modal visible={modalVisible} animationType="slide">
+      <Modal visible={modalVisible} animationType="fade">
         <View style={tw`flex-1 justify-center items-center bg-white p-6`}>
           <Text style={tw`text-lg font-bold mb-4`}>Edit Your Details</Text>
           <TextInput

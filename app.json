@@ -5,10 +5,10 @@
     "scheme": "sarayaplus",
     "version": "2.1.0",
     "orientation": "portrait",
-    "icon": "./App/assets/Logo.png",
+    "icon": "./App/assets/logoAssets/sarayaiconsquare.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./App/assets/splash.png",
+      "image": "./App/assets/Splash_Screen.png",
       "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },

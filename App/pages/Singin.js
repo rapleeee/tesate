@@ -16,7 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import { auth, db } from '../../firebase';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Google from 'expo-auth-session/providers/google';
 import tw from 'twrnc';
@@ -112,26 +112,37 @@ export default function Signin() {
       Alert.alert("Error", "Please enter both email and password.", [{ text: "OK" }]);
       return;
     }
-
+  
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
+  
       if (isRemembered) {
         saveCredentials(email, password);
       } else {
         removeCredentials();
       }
-
+  
       const userDocRef = doc(db, "users", user.uid);
       const userDoc = await getDoc(userDocRef);
-
+  
       if (userDoc.exists()) {
         const userData = userDoc.data();
+  
+        // Periksa apakah modul "Dasar Keuangan Bisnis" sudah ditambahkan
+        if (!userData.coursesJoined || !userData.coursesJoined.includes(1)) {
+          await updateDoc(userDocRef, {
+            coursesJoined: userData.coursesJoined
+              ? [...userData.coursesJoined, 1]
+              : [1], // Jika coursesJoined belum ada, buat array baru
+          });
+          console.log("Modul 'Dasar Keuangan Bisnis' ditambahkan ke akun pengguna.");
+        }
+  
         if (userData.hasCompletedSurvey) {
           navigation.replace("MainApp");
         } else {
-          navigation.replace("BusinessSurvey");
+          navigation.replace("bisnisSurvey");
         }
       } else {
         Alert.alert("Error", "User data not found.");
@@ -146,6 +157,7 @@ export default function Signin() {
       }
     }
   };
+  
 
   const resetPassword = () => {
     if (email === "") {
