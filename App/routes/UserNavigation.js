@@ -51,6 +51,7 @@ import AccordionScreen from "../etc/accordionPage/AccordionScreen";
 import FondationI from "../etc/Kuis/level1/FondationI";
 import TujuanKeuangan from "../etc/Kuis/level1/TujuanKeuangan";
 import NilaiUang from "../etc/Kuis/level1/NilaiUang";
+import AsetdanLiabilitas from "../etc/Kuis/level1/AsetdanLiabilitas";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -212,6 +213,7 @@ const UserNavigation = () => {
         <Stack.Screen name="kuisFondationI" component={FondationI}/>
         <Stack.Screen name="kuisTujuanKeuangan" component={TujuanKeuangan}/>
         <Stack.Screen name="kuisNilaiUang" component={NilaiUang}/>
+        <Stack.Screen name="kuisAsetLiabilitas" component={AsetdanLiabilitas}/>
         
       </Stack.Navigator>
    

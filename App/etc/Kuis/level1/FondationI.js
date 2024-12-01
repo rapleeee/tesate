@@ -11,7 +11,6 @@ import { Ionicons } from '@expo/vector-icons';
 const FondationI = ({ navigation }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [incorrectQuestions, setIncorrectQuestions] = useState([]);
-  const [answeredCorrectly, setAnsweredCorrectly] = useState(new Set());
   const [selectedOption, setSelectedOption] = useState(null);
   const [isCorrect, setIsCorrect] = useState(null);
   const [userUID, setUserUID] = useState(null);
@@ -50,16 +49,20 @@ const FondationI = ({ navigation }) => {
     setSelectedOption(pressedOption);
     const isAnswerCorrect =
       reactQuestions[currentQuestionIndex].correctAnswer === pressedOption;
-
+  
     setIsCorrect(isAnswerCorrect);
-
+  
     if (!isAnswerCorrect) {
-      setIncorrectQuestions((prev) => [
-        ...prev,
-        reactQuestions[currentQuestionIndex],
-      ]);
+      setIncorrectQuestions((prev) => {
+        // Tambahkan pertanyaan jika belum ada di daftar incorrectQuestions
+        if (!prev.includes(currentQuestionIndex)) {
+          return [...prev, currentQuestionIndex];
+        }
+        return prev;
+      });
     } else {
-      setAnsweredCorrectly((prev) => new Set(prev).add(currentQuestionIndex));
+      // Hapus pertanyaan dari daftar incorrectQuestions jika dijawab benar
+      setIncorrectQuestions((prev) => prev.filter((index) => index !== currentQuestionIndex));
     }
   };
 
@@ -79,29 +82,29 @@ const FondationI = ({ navigation }) => {
       Alert.alert("Pilih jawaban terlebih dahulu!");
       return;
     }
-
+  
     if (currentQuestionIndex === reactQuestions.length - 1) {
       if (incorrectQuestions.length > 0) {
-        setCurrentQuestionIndex(0);
+        // Masih ada jawaban salah, ulangi pertanyaan yang salah
+        setCurrentQuestionIndex(incorrectQuestions[0]); // Kembali ke pertanyaan salah pertama
         setSelectedOption(null);
         Alert.alert("Perbaiki Jawaban", "Masih ada jawaban salah. Silakan ulangi.");
       } else {
-        setXp((prevXp) => {
-          const updatedXp = prevXp + 30; // Tambah XP
-          updateXpInFirestore(updatedXp); // Sinkronkan ke Firestore
-          return updatedXp; // Perbarui state
-        });
-
+        // Semua jawaban benar, tambahkan XP
+        const updatedXp = xp + 30;
+        await updateXpInFirestore(updatedXp); // Sinkronkan ke Firestore
+        setXp(updatedXp); // Perbarui state lokal
+  
         saveTimeSpent(userUID, timeElapsed); // Simpan waktu
         navigation.navigate("scoreLaporanKeuangan", { timeSpent: timeElapsed });
       }
     } else {
+      // Pindah ke pertanyaan berikutnya
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setSelectedOption(null);
       setIsCorrect(null);
     }
   };
-  
   const saveQuizScore = async (uid, xpEarned) => {
     try {
       const userDocRef = doc(db, 'users', uid);

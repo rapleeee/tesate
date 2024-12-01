@@ -18,7 +18,7 @@ const Roadmap = () => {
     { id: 3, title: 'Foundation II', status: 'locked', route: 'kuisFondationI' },
     { id: 4, title: 'Tujuan Keuangan', status: 'locked', route: 'kuisTujuanKeuangan' },
     { id: 5, title: 'Nilai Uang', status: 'locked', route: 'kuisNilaiUang' },
-    { id: 6, title: 'Aset dan Liabilitas', status: 'locked', route: 'asetLiabilities' },
+    { id: 6, title: 'Aset dan Liabilitas', status: 'locked', route: 'kuisAsetLiabilitas' },
   ]);
 
   const [xp, setXp] = useState(0);
@@ -39,14 +39,15 @@ const Roadmap = () => {
     try {
       const userRef = doc(db, 'users', uid);
       const userSnap = await getDoc(userRef);
+  
       if (userSnap.exists()) {
         const userData = userSnap.data();
         setXp(userData.xp || 0);
         setCoins(userData.coins || 0);
-
+  
         const completedModules = userData.completedModules || [];
-
-        // Update initialModules: Ensure id 0 is always in-progress
+  
+        // Update initialModules
         setInitialModules((prevModules) =>
           prevModules.map((module, index) => {
             if (index === 0) {
@@ -61,7 +62,7 @@ const Roadmap = () => {
             }
           })
         );
-
+  
         // Update mainModules
         setMainModules((prevModules) =>
           prevModules.map((module, index) => {
@@ -69,7 +70,7 @@ const Roadmap = () => {
               return { ...module, status: 'completed' };
             } else if (
               index === 0 &&
-              completedModules.includes(initialModules[1].id)
+              completedModules.includes(initialModules[1].id) // Pastikan modul ke-0 selesai
             ) {
               return { ...module, status: 'in-progress' };
             } else if (
@@ -88,6 +89,33 @@ const Roadmap = () => {
     }
   };
 
+  const completeModule = async (moduleId) => {
+    try {
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
+  
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        const completedModules = userData.completedModules || [];
+  
+        if (!completedModules.includes(moduleId)) {
+          // Tambahkan modul yang telah selesai
+          const updatedCompletedModules = [...completedModules, moduleId];
+  
+          await updateDoc(userRef, {
+            completedModules: updatedCompletedModules,
+          });
+  
+          // Perbarui status modul di state
+          fetchUserData(userId); // Refresh data modul setelah perubahan
+        }
+      }
+    } catch (error) {
+      console.error('Error completing module: ', error);
+    }
+  };
+  
+
   const handleRefresh = () => {
     setIsRefreshing(true);
     fetchUserData(userId).then(() => setIsRefreshing(false));
@@ -102,12 +130,21 @@ const Roadmap = () => {
     }
     return <Image source={require('./../assets/roadMap/lock-icon.png')} style={tw`w-15 h-15`} />;
   };
+  
 
   const handleModulePress = (module) => {
-    if (module.status === 'in-progress') {
+    if (module.status === 'in-progress' || module.status === 'completed') {
       navigation.navigate(module.route);
     }
   };
+  
+
+  const finishModule = (moduleId) => {
+    completeModule(moduleId); // Tandai modul sebagai selesai
+    Alert.alert('Selamat!', 'Modul selesai. Modul berikutnya telah dibuka.');
+    navigation.goBack();
+  };
+  
 
   return (
     <SafeAreaView style={tw`flex-1`}>

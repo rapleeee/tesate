@@ -10,10 +10,9 @@ import { Ionicons } from '@expo/vector-icons';
 
 const KuisLaporanKeuangan = ({ navigation }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [incorrectQuestions, setIncorrectQuestions] = useState([]);
-  const [answeredCorrectly, setAnsweredCorrectly] = useState(new Set());
   const [selectedOption, setSelectedOption] = useState(null);
   const [isCorrect, setIsCorrect] = useState(null);
+  const [incorrectQuestions, setIncorrectQuestions] = useState([]);
   const [userUID, setUserUID] = useState(null);
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [xp, setXp] = useState(0);
@@ -50,18 +49,23 @@ const KuisLaporanKeuangan = ({ navigation }) => {
     setSelectedOption(pressedOption);
     const isAnswerCorrect =
       reactQuestionsFondationI[currentQuestionIndex].correctAnswer === pressedOption;
-
+  
     setIsCorrect(isAnswerCorrect);
-
+  
     if (!isAnswerCorrect) {
-      setIncorrectQuestions((prev) => [
-        ...prev,
-        reactQuestionsFondationI[currentQuestionIndex],
-      ]);
+      setIncorrectQuestions((prev) => {
+        // Tambahkan pertanyaan jika belum ada di daftar incorrectQuestions
+        if (!prev.includes(currentQuestionIndex)) {
+          return [...prev, currentQuestionIndex];
+        }
+        return prev;
+      });
     } else {
-      setAnsweredCorrectly((prev) => new Set(prev).add(currentQuestionIndex));
+      // Hapus pertanyaan dari daftar incorrectQuestions jika dijawab benar
+      setIncorrectQuestions((prev) => prev.filter((index) => index !== currentQuestionIndex));
     }
   };
+  
 
    // Fungsi sinkronisasi XP ke Firestore
    const updateXpInFirestore = async (updatedXp) => {
@@ -73,34 +77,58 @@ const KuisLaporanKeuangan = ({ navigation }) => {
       console.error('Gagal menyinkronkan XP:', error);
     }
   };
+  
 
+
+  const updateCorrectAnswers = async (correctCount) => {
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        const today = new Date().toISOString().split("T")[0];
+        const userDocRef = doc(db, "users", user.uid);
+  
+        await updateDoc(userDocRef, {
+          dailyQuiz: {
+            date: today,
+            correctAnswers: correctCount,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Error updating correct answers:", error);
+    }
+  };
+
+  
   const handleNext = async () => {
     if (selectedOption === null) {
       Alert.alert("Pilih jawaban terlebih dahulu!");
       return;
     }
-
+  
     if (currentQuestionIndex === reactQuestionsFondationI.length - 1) {
       if (incorrectQuestions.length > 0) {
-        setCurrentQuestionIndex(0);
+        // Masih ada jawaban salah, ulangi pertanyaan yang salah
+        setCurrentQuestionIndex(incorrectQuestions[0]); // Kembali ke pertanyaan salah pertama
         setSelectedOption(null);
         Alert.alert("Perbaiki Jawaban", "Masih ada jawaban salah. Silakan ulangi.");
       } else {
-        setXp((prevXp) => {
-          const updatedXp = prevXp + 30; // Tambah XP
-          updateXpInFirestore(updatedXp); // Sinkronkan ke Firestore
-          return updatedXp; // Perbarui state
-        });
-
+        // Semua jawaban benar, tambahkan XP
+        const updatedXp = xp + 30;
+        await updateXpInFirestore(updatedXp); // Sinkronkan ke Firestore
+        setXp(updatedXp); // Perbarui state lokal
+  
         saveTimeSpent(userUID, timeElapsed); // Simpan waktu
         navigation.navigate("scoreLaporanKeuangan", { timeSpent: timeElapsed });
       }
     } else {
+      // Pindah ke pertanyaan berikutnya
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setSelectedOption(null);
       setIsCorrect(null);
     }
   };
+  
   
   const saveQuizScore = async (uid, xpEarned) => {
     try {

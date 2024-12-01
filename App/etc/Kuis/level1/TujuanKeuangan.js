@@ -11,7 +11,6 @@ import { Ionicons } from '@expo/vector-icons';
 const TujuanKeuangan = ({ navigation }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [incorrectQuestions, setIncorrectQuestions] = useState([]);
-  const [answeredCorrectly, setAnsweredCorrectly] = useState(new Set());
   const [selectedOption, setSelectedOption] = useState(null);
   const [isCorrect, setIsCorrect] = useState(null);
   const [userUID, setUserUID] = useState(null);
@@ -50,18 +49,23 @@ const TujuanKeuangan = ({ navigation }) => {
     setSelectedOption(pressedOption);
     const isAnswerCorrect =
       reactQuestionsTujuanKeuangan[currentQuestionIndex].correctAnswer === pressedOption;
-
+  
     setIsCorrect(isAnswerCorrect);
-
+  
     if (!isAnswerCorrect) {
-      setIncorrectQuestions((prev) => [
-        ...prev,
-        reactQuestionsTujuanKeuangan[currentQuestionIndex],
-      ]);
+      setIncorrectQuestions((prev) => {
+        // Tambahkan pertanyaan jika belum ada di daftar incorrectQuestions
+        if (!prev.includes(currentQuestionIndex)) {
+          return [...prev, currentQuestionIndex];
+        }
+        return prev;
+      });
     } else {
-      setAnsweredCorrectly((prev) => new Set(prev).add(currentQuestionIndex));
+      // Hapus pertanyaan dari daftar incorrectQuestions jika dijawab benar
+      setIncorrectQuestions((prev) => prev.filter((index) => index !== currentQuestionIndex));
     }
   };
+  
 
    // Fungsi sinkronisasi XP ke Firestore
    const updateXpInFirestore = async (updatedXp) => {
@@ -73,34 +77,64 @@ const TujuanKeuangan = ({ navigation }) => {
       console.error('Gagal menyinkronkan XP:', error);
     }
   };
+  
+
+  const completeModule = async (moduleId) => {
+    try {
+      const userDocRef = doc(db, 'users', userUID);
+      const userDoc = await getDoc(userDocRef);
+  
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const completedModules = userData.completedModules || [];
+  
+        if (!completedModules.includes(moduleId)) {
+          const updatedCompletedModules = [...completedModules, moduleId];
+  
+          await updateDoc(userDocRef, {
+            completedModules: updatedCompletedModules,
+          });
+  
+          console.log(`Modul ${moduleId} berhasil ditandai sebagai selesai`);
+        }
+      }
+    } catch (error) {
+      console.error('Gagal menandai modul sebagai selesai: ', error);
+    }
+  };
 
   const handleNext = async () => {
     if (selectedOption === null) {
       Alert.alert("Pilih jawaban terlebih dahulu!");
       return;
     }
-
+  
     if (currentQuestionIndex === reactQuestionsTujuanKeuangan.length - 1) {
       if (incorrectQuestions.length > 0) {
-        setCurrentQuestionIndex(0);
+        // Masih ada jawaban salah, ulangi pertanyaan yang salah
+        setCurrentQuestionIndex(incorrectQuestions[0]); // Kembali ke pertanyaan salah pertama
         setSelectedOption(null);
         Alert.alert("Perbaiki Jawaban", "Masih ada jawaban salah. Silakan ulangi.");
       } else {
-        setXp((prevXp) => {
-          const updatedXp = prevXp + 30; // Tambah XP
-          updateXpInFirestore(updatedXp); // Sinkronkan ke Firestore
-          return updatedXp; // Perbarui state
-        });
-
+        // Semua jawaban benar, tambahkan XP
+        const updatedXp = xp + 30;
+        await updateXpInFirestore(updatedXp); // Sinkronkan ke Firestore
+        setXp(updatedXp); // Perbarui state lokal
+  
+        // Tandai modul sebagai selesai
+        await completeModule(4); // ID modul untuk "Tujuan Keuangan"
+  
         saveTimeSpent(userUID, timeElapsed); // Simpan waktu
         navigation.navigate("scoreLaporanKeuangan", { timeSpent: timeElapsed });
       }
     } else {
+      // Pindah ke pertanyaan berikutnya
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setSelectedOption(null);
       setIsCorrect(null);
     }
   };
+  
   
   const saveQuizScore = async (uid, xpEarned) => {
     try {
