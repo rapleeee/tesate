@@ -164,7 +164,7 @@ const KuisLaporanKeuangan = ({ navigation }) => {
 
   return (
     <SafeAreaView style={tw`flex-1`}>
-      <ScrollView style={tw`p-4`}>
+    <ScrollView style={tw`p-4`}>
         <Text style={tw`text-base font-bold text-center mt-4 mb-5`}>
           {reactQuestionsFondationI[currentQuestionIndex].question}
         </Text>

@@ -196,7 +196,7 @@ const MainApp = () => {
               </View>
               <View style={tw`flex-row items-center gap-2`}>
                 <Ionicons name="flash-outline" size={24} color="white" onPress={openModal} />
-                <Ionicons name="notifications" size={24} color="white" />
+                <Ionicons name="notifications" size={24} color="white" onPress={() => navigation.navigate('notification')}/>
               </View>
             </View>
             <Text style={tw`text-lg font-light text-white `}>{fullname}</Text>
@@ -245,20 +245,20 @@ const MainApp = () => {
           </View>
           <View style={tw`px-6 mt-6`}>
             <View style={tw`flex-row justify-between gap-2`}>
-              <View style={tw`bg-[#5581F1] flex-1 px-4 py-2 rounded-lg flex-row items-center gap-2`}>
-                <Image source={require('../assets/homePage/XP1.png')} style={tw`w-10 h-10`} />
+              <TouchableOpacity style={tw`bg-[#5581F1] flex-1 px-4 py-2 rounded-lg flex-row items-center gap-2`}  onPress={() => navigation.navigate('roadmap')}>
+                <Image source={require('../assets/homePage/XP1.png')} style={tw`w-10 h-10`}  />
                 <View>
-                  <Text style={tw`text-sm text-white`}>{xp}</Text>
+                  <Text style={tw`text-sm text-white`} >{xp}</Text>
                   <Text style={tw`text-sm text-white`}>Total Poin</Text>
                 </View>
-              </View>
-              <View style={tw`bg-[#EF3C56] flex-1 px-4 py-2 rounded-lg flex-row items-center gap-2`}>
+              </TouchableOpacity>
+              <TouchableOpacity style={tw`bg-[#EF3C56] flex-1 px-4 py-2 rounded-lg flex-row items-center gap-2`}  onPress={() => navigation.navigate('tugas')}>
                 <Image source={require('../assets/homePage/coins.png')} style={tw`w-10 h-10`} />
                 <View>
                   <Text style={tw`text-sm text-white`}>{coins}</Text>
                   <Text style={tw`text-sm text-white`}>Total Koin</Text>
                 </View>
-              </View>
+              </TouchableOpacity>
             </View>
 
             {/* Explore Lesson */}

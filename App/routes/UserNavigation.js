@@ -113,7 +113,7 @@ const UserNavigation = () => {
             tabBarIcon: ({ focused }) => (
               <TabBarIcon
                 iconName="leaderboard"
-                label="Leaderboard"
+                label="Leadboard"
                 focused={focused}
                 additionalStyle={{ marginRight: 15 }}
               />
@@ -173,7 +173,7 @@ const UserNavigation = () => {
         <Stack.Screen name="Main" component={Main} />
         <Stack.Screen name="akun" component={Akun} />
         <Stack.Screen name="tugas" component={Tugas}/>
-        <Stack.Screen name="faq" component={Question}/>
+        <Stack.Screen name="notification" component={Question}/>
         <Stack.Screen name="other" component={Other}/>
         <Stack.Screen name="edu" component={Edu}/>
         <Stack.Screen name="news" component={News}/>

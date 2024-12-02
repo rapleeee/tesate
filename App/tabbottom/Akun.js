@@ -83,23 +83,23 @@ export default function Akun() {
       Alert.alert("Permission to access media library is required!");
       return;
     }
-  
+
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
     });
-  
+
     if (!result.canceled) {
       try {
         const downloadURL = await uploadImage(result.assets[0].uri); // Unggah gambar dan dapatkan URL
         setProfileImage(downloadURL); // Perbarui gambar di UI
-  
+
         // Simpan URL ke Firestore
         const userDocRef = doc(db, "users", auth.currentUser.uid);
         await updateDoc(userDocRef, { profileImage: downloadURL });
-  
+
         Alert.alert("Success", "Profile image updated successfully!");
       } catch (error) {
         console.error("Error uploading image:", error);
@@ -107,7 +107,7 @@ export default function Akun() {
       }
     }
   };
-  
+
 
   const handleRefresh = () => {
     setIsRefreshing(true);
@@ -118,28 +118,28 @@ export default function Akun() {
     }, 2000);
   };
 
-  
-const uploadImage = async (uri) => {
-  try {
-    const storage = getStorage();
-    const response = await fetch(uri);
-    const blob = await response.blob();
-    
-    // Buat referensi di Firebase Storage
-    const filename = `profileImages/${auth.currentUser.uid}_${new Date().getTime()}.jpg`;
-    const storageRef = ref(storage, filename);
 
-    // Unggah blob ke Storage
-    await uploadBytes(storageRef, blob);
+  const uploadImage = async (uri) => {
+    try {
+      const storage = getStorage();
+      const response = await fetch(uri);
+      const blob = await response.blob();
 
-    // Dapatkan URL gambar yang telah diunggah
-    const downloadURL = await getDownloadURL(storageRef);
-    return downloadURL;
-  } catch (error) {
-    console.error("Error uploading image:", error);
-    throw error;
-  }
-};
+      // Buat referensi di Firebase Storage
+      const filename = `profileImages/${auth.currentUser.uid}_${new Date().getTime()}.jpg`;
+      const storageRef = ref(storage, filename);
+
+      // Unggah blob ke Storage
+      await uploadBytes(storageRef, blob);
+
+      // Dapatkan URL gambar yang telah diunggah
+      const downloadURL = await getDownloadURL(storageRef);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      throw error;
+    }
+  };
 
   const handleLogout = () => {
     auth.signOut()
@@ -182,14 +182,14 @@ const uploadImage = async (uri) => {
                   style={tw`h-18 w-18 rounded-full border-2 border-[#EF980C]`}
                 />
               </TouchableOpacity>
-              <View style={tw`flex flex-row items-center justify-between gap-26`}>
+              <View style={tw`flex flex-col items-center justify-between gap-26`}>
                 <View style={tw`ml-4`}>
-                  <Text style={tw`text-white text-lg font-bold`}>{fullname}</Text>
-                  <Text style={tw`text-white text-sm mb-2`}>{businessName}</Text>
+                  <Text style={tw`text-white text-xl font-bold`}>{fullname}</Text>
+                  <Text style={tw`text-white text-base`}>{businessName}</Text>
+                  <TouchableOpacity onPress={() => navigation.navigate("editAccount")}>
+                    <Text style={tw`text-white font-semibold`}>Ubah</Text>
+                  </TouchableOpacity>
                 </View>
-                <TouchableOpacity onPress={() => navigation.navigate("editAccount")}>
-                  <Text style={tw`text-white font-semibold`}>Ubah</Text>
-                </TouchableOpacity>
               </View>
             </View>
           </ImageBackground>

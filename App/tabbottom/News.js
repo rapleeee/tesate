@@ -32,8 +32,8 @@ const News = ({ navigation }) => {
     });
 
     const monthNames = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
+      "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+      "Juli", "August", "September", "October", "November", "Desember"
     ];
     const date = new Date();
     const month = monthNames[date.getMonth()];

@@ -65,7 +65,7 @@ const VideoMateriKeuangan = () => {
         }
       }
       // Navigasi ke video berikutnya
-      navigation.navigate('videoKeuanganII');
+      navigation.navigate('roadmap');
     }
   };
 
