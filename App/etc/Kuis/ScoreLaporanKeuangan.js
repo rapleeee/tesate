@@ -19,21 +19,22 @@ const ScoreLaporanKeuangan = ({ route, navigation }) => {
         Selamat!
       </Text>
       <Text style={tw`text-lg mt-2 text-center`}>
-        Kamu berhasil mendapatkan skor {score}
+        Kamu berhasil mendapatkan 
       </Text>
-
-      {xpEarned > 0 && (
-        <View style={tw`flex-row items-center mt-6  p-4 rounded-lg`}>
+        <View style={tw`flex-row items-center mt-2  p-4 rounded-lg`}>
           <Image
-            source={require('../../assets/homePage/XP.png')}
+            source={require('../../assets/homePage/XP1.png')}
             style={tw`w-10 h-10 mr-3`}
             resizeMode="contain"
           />
-          <Text style={tw`text-2xl font-bold text-yellow-400`}>
+          <Text style={tw`text-4xl text-yellow-400`}>
             30 
           </Text>
         </View>
-      )}
+
+      
+        
+      
 
       <Pressable
         style={tw`bg-[#BB1624] py-3 px-16 rounded-lg mt-12`}

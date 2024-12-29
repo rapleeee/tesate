@@ -8,19 +8,17 @@ import {
   Alert, 
   Pressable 
 } from 'react-native';
+import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackHandler } from "react-native";
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
-import { auth, db } from '../../firebase';
+import { auth } from '../../firebase';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
-import { Ionicons } from '@expo/vector-icons';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Google from 'expo-auth-session/providers/google';
 import tw from 'twrnc';
-
 
 export default function Signin() {
   const [email, setEmail] = useState('');
@@ -33,9 +31,10 @@ export default function Signin() {
   // Google Auth Provider
   const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId: '826300876657-lk3bji4sc7sj7i7iptdcs5eqehnmkbg7.apps.googleusercontent.com',
-    iosClientId: '826300876657-lk3bji4sc7sj7i7iptdcs5eqehnmkbg7.apps.googleusercontent.com', // Jika Anda menggunakan iOS
-    expoClientId: '826300876657-lk3bji4sc7sj7i7iptdcs5eqehnmkbg7.apps.googleusercontent.com', // Jika menggunakan Expo Go
+    iosClientId: '826300876657-lk3bji4sc7sj7i7iptdcs5eqehnmkbg7.apps.googleusercontent.com',
+    expoClientId: '826300876657-lk3bji4sc7sj7i7iptdcs5eqehnmkbg7.apps.googleusercontent.com',
   });
+
   const togglePasswordVisibility = () => {
     setSecureTextEntry(!secureTextEntry);
   };
@@ -53,17 +52,11 @@ export default function Signin() {
       backAction
     );
 
-    const unsubscribe = auth.onAuthStateChanged(async (authUser) => {
+    const unsubscribe = auth.onAuthStateChanged((authUser) => {
       if (!authUser) {
         setLoading(false);
       } else {
-        const userDocRef = doc(db, "users", authUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists() && userDoc.data().hasCompletedSurvey) {
-          navigation.replace("MainApp");
-        } else {
-          navigation.replace("bisnisSurvey");
-        }
+        navigation.replace("MainApp");
       }
     });
 
@@ -114,39 +107,13 @@ export default function Signin() {
     }
   
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-  
+      await signInWithEmailAndPassword(auth, email, password);
       if (isRemembered) {
         saveCredentials(email, password);
       } else {
         removeCredentials();
       }
-  
-      const userDocRef = doc(db, "users", user.uid);
-      const userDoc = await getDoc(userDocRef);
-  
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-  
-        // Periksa apakah modul "Dasar Keuangan Bisnis" sudah ditambahkan
-        if (!userData.coursesJoined || !userData.coursesJoined.includes(1)) {
-          await updateDoc(userDocRef, {
-            coursesJoined: userData.coursesJoined
-              ? [...userData.coursesJoined, 1]
-              : [1], // Jika coursesJoined belum ada, buat array baru
-          });
-          console.log("Modul 'Dasar Keuangan Bisnis' ditambahkan ke akun pengguna.");
-        }
-  
-        if (userData.hasCompletedSurvey) {
-          navigation.replace("MainApp");
-        } else {
-          navigation.replace("bisnisSurvey");
-        }
-      } else {
-        Alert.alert("Error", "User data not found.");
-      }
+      navigation.replace("MainApp");
     } catch (error) {
       if (error.code === "auth/user-not-found") {
         Alert.alert("Error", "Account not found.", [{ text: "OK" }]);
@@ -157,7 +124,6 @@ export default function Signin() {
       }
     }
   };
-  
 
   const resetPassword = () => {
     if (email === "") {
@@ -177,11 +143,10 @@ export default function Signin() {
     setIsRemembered(!isRemembered);
   };
 
-  // Google Login
   useEffect(() => {
     if (response?.type === 'success') {
       const { authentication } = response;
-      // Use Firebase signInWithCredential if needed here
+      // Implement Google sign-in logic here
     }
   }, [response]);
 
@@ -245,4 +210,3 @@ export default function Signin() {
     </SafeAreaView>
   );
 }
-

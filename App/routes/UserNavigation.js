@@ -68,7 +68,7 @@ const CustomTabBarButton = ({ children, onPress }) => (
         borderRadius: 35,
         borderWidth: 4,
         borderColor: "#E3E3E3",
-        backgroundColor: "#BB1624",
+        backgroundColor: "#08B41CFF",
       }}
     >
       {children}
@@ -112,8 +112,8 @@ const UserNavigation = () => {
           options={{
             tabBarIcon: ({ focused }) => (
               <TabBarIcon
-                iconName="leaderboard"
-                label="Leadboard"
+                iconName="message-badge"
+                label="Information"
                 focused={focused}
                 additionalStyle={{ marginRight: 15 }}
               />
@@ -126,7 +126,7 @@ const UserNavigation = () => {
           component={Roadmap}
           options={{
             tabBarIcon: () => (
-              <MaterialCommunityIcons name="book-education-outline" size={34} color="#E3E3E3" />
+              <MaterialCommunityIcons name="cart" size={34} color="#E3E3E3" />
             ),
             tabBarButton: (props) => <CustomTabBarButton {...props} />,
           }}
@@ -139,8 +139,8 @@ const UserNavigation = () => {
           options={{
             tabBarIcon: ({ focused }) => (
               <TabBarIcon
-                iconName="medal"
-                label="Reward"
+                iconName="circle-notifications"
+                label="Notification"
                 focused={focused}
               />
             ),

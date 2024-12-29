@@ -44,7 +44,8 @@
     "react-native-video": "^6.4.5",
     "react-native-youtube-iframe": "^2.3.0",
     "tailwindcss-react-native": "^1.7.10",
-    "twrnc": "^4.2.0"
+    "twrnc": "^4.2.0",
+    "expo-location": "~16.5.5"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
