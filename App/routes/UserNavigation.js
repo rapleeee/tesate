@@ -134,8 +134,8 @@ const UserNavigation = () => {
         
 
         <Tab.Screen
-          name="reward"
-          component={Tugas}
+          name="notification"
+          component={Question}
           options={{
             tabBarIcon: ({ focused }) => (
               <TabBarIcon

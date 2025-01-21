@@ -8,8 +8,8 @@
     "icon": "./App/assets/logoAssets/sarayaiconsquare.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./App/assets/Splash_Screen.png",
-      "resizeMode": "cover",
+      "image": "./App/assets/sateh.png",
+      "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "assetBundlePatterns": [

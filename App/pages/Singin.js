@@ -14,8 +14,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackHandler } from "react-native";
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
-import { auth } from '../../firebase';
+import { auth, db } from '../../firebase'; // Pastikan Anda memiliki Firestore di firebase.js
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Google from 'expo-auth-session/providers/google';
 import tw from 'twrnc';
@@ -107,13 +108,40 @@ export default function Signin() {
     }
   
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Cek jika email adalah admin@gmail.com
+      if (email === "admin@gmail.com") {
+        navigation.replace("adminPanel"); // Arahkan ke halaman AdminPanel
+        return;
+      }
+
+      // Ambil data pengguna dari Firestore
+      const userDocRef = doc(db, "users", user.uid); // Asumsi koleksi Firestore adalah "users"
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+
+        // Cek role pengguna
+        if (userData.role === "seller") {
+          navigation.replace("adminPanel"); // Penjual diarahkan ke AdminPanel
+        } else if (userData.role === "buyer") {
+          navigation.replace("MainApp"); // Pembeli diarahkan ke MainApp
+        } else {
+          Alert.alert("Error", "Invalid role. Contact support.", [{ text: "OK" }]);
+        }
+      } else {
+        Alert.alert("Error", "User data not found in Firestore.", [{ text: "OK" }]);
+      }
+
+      // Simpan atau hapus kredensial berdasarkan pilihan pengguna
       if (isRemembered) {
         saveCredentials(email, password);
       } else {
         removeCredentials();
       }
-      navigation.replace("MainApp");
     } catch (error) {
       if (error.code === "auth/user-not-found") {
         Alert.alert("Error", "Account not found.", [{ text: "OK" }]);
@@ -146,7 +174,18 @@ export default function Signin() {
   useEffect(() => {
     if (response?.type === 'success') {
       const { authentication } = response;
-      // Implement Google sign-in logic here
+      if (authentication) {
+        const { idToken, accessToken } = authentication;
+        const credential = GoogleAuthProvider.credential(idToken, accessToken);
+        signInWithCredential(auth, credential)
+          .then((userCredential) => {
+            const user = userCredential.user;
+            navigation.replace("MainApp");
+          })
+          .catch((error) => {
+            Alert.alert("Error", error.message, [{ text: "OK" }]);
+          });
+      }
     }
   }, [response]);
 

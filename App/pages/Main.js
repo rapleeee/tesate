@@ -1,35 +1,24 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  FlatList,
-  TouchableOpacity,
-  Dimensions,
-  ScrollView,
-  Image,
-} from "react-native";
+import { View, Text, TextInput, FlatList, TouchableOpacity, Dimensions, ScrollView, Image, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
-import tw from "twrnc";
 import * as Location from "expo-location";
 import { LinearGradient } from "expo-linear-gradient";
 import { auth, db } from "../../firebase";
 import { doc, getDoc } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
+import tw from "twrnc";
 
 const MainApp = () => {
   const screenWidth = Dimensions.get("window").width;
   const [greeting, setGreeting] = useState("");
-  const [fullname, setFullname] = useState("Guest"); 
+  const [fullname, setFullname] = useState("Guest");
   const [location, setLocation] = useState("Fetching location...");
   const [categories, setCategories] = useState(["Recommended", "Food", "Drinks", "Snacks"]);
   const [selectedCategory, setSelectedCategory] = useState("Food");
-  const [items, setItems] = useState([
-    { id: 1, name: "Avocado Salad", time: "20min", rating: 4.5, price: "$15.00", image: require("../assets/StartPage/sateh.png") },
-    { id: 2, name: "Burger", time: "25min", rating: 4.7, price: "$10.00", image: require("../assets/StartPage/sateh.png") },
-    { id: 3, name: "Pizza", time: "30min", rating: 4.3, price: "$12.00", image: require("../assets/StartPage/sateh.png") },
-  ]);
+  const [items, setItems] = useState([]); // Data produk dari Firebase
+
 
   useEffect(() => {
     const getGreeting = () => {
@@ -77,53 +66,66 @@ const MainApp = () => {
       }
     };
 
+    const fetchData = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "Makanan", ));
+        const fetchedItems = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          name: doc.data().name, // Pastikan sesuai dengan atribut di Firestore
+          time: doc.data().cookingTime,
+          price: doc.data().price || "Rp 15000", // Pastikan ada default jika atribut kosong
+          image: { uri: doc.data().image }, // Harus dalam bentuk URI
+          stock: doc.data().stock,
+          category: doc.data().category || "Food", // Tambahkan kategori jika perlu
+        }));
+        setItems(fetchedItems);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+
+    fetchData();
+
     setGreeting(getGreeting());
     fetchLocation();
     fetchFullname(); // Fetch fullname on component mount
-  }, []);
+  }, [selectedCategory]);
 
   return (
     <SafeAreaView style={tw`flex-1 bg-white`}>
+    <ScrollView>
       <StatusBar />
       <LinearGradient colors={["#5A2E02FF", "#D2D0CFFF"]} style={tw`flex-1`}>
         <View style={tw`px-4 py-2`}>
-          {/* Header Section */}
           <View style={tw`flex-row justify-center items-center mb-4`}>
             <Text style={tw`text-sm text-neutral-200`}>{location}</Text>
           </View>
-
-          {/* Greeting Section */}
           <View style={tw`mb-2`}>
-            <Text style={tw`text-base font-bold text-neutral-200`}>
+            <Text style={tw`text-xl font-bold text-neutral-200`}>
               {greeting}, {fullname}
             </Text>
           </View>
-
-          {/* Search Bar */}
-          <View style={tw`flex-row items-center bg-gray-200 p-2 rounded-lg mt-2 mb-4`}>
+          <View style={tw`flex-row items-center bg-gray-200 p-2 rounded-lg mb-4`}>
             <TextInput
               placeholder="Cari Makan Minum"
               style={tw`flex-1 px-4`}
             />
             <Ionicons name="search" size={20} color="gray" />
           </View>
-
-          {/* Categories */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {categories.map((category) => (
               <TouchableOpacity
                 key={category}
-                style={tw`px-4 py-2 rounded-lg ${
-                  selectedCategory === category
-                    ? "bg-green-500"
-                    : "bg-gray-200"
-                } mr-2`}
+                style={tw`px-4 py-2 rounded-lg ${selectedCategory === category
+                  ? "bg-green-500"
+                  : "bg-gray-200"
+                  } mr-2`}
                 onPress={() => setSelectedCategory(category)}
               >
                 <Text
-                  style={tw`${
-                    selectedCategory === category ? "text-white" : "text-black"
-                  }`}
+                  style={tw`${selectedCategory === category ? "text-white" : "text-black"
+                    }`}
                 >
                   {category}
                 </Text>
@@ -131,32 +133,45 @@ const MainApp = () => {
             ))}
           </ScrollView>
 
-          {/* Items Section */}
-          {/* <FlatList
-            data={items}
+          <FlatList
+            data={items.filter((item) => selectedCategory === "Recommended" || item.category === selectedCategory)}
             keyExtractor={(item) => item.id.toString()}
+            numColumns={2} // Menampilkan 2 kolom
+            columnWrapperStyle={tw`justify-between`} // Menjaga jarak antar kolom
             renderItem={({ item }) => (
               <View
-                style={tw`flex-row items-center bg-gray-100 p-4 rounded-lg mb-4 mt-4`}
+                style={tw`bg-white rounded-xl shadow-lg mb-4 w-[47%] mt-4 p-2`}
               >
                 <Image
                   source={item.image}
-                  style={tw`w-20 h-20 rounded-lg mr-4`}
+                  style={tw`w-full h-32 rounded-lg`}
                 />
-                <View style={tw`flex-1`}>
-                  <Text style={tw`text-lg font-bold`}>{item.name}</Text>
-                  <Text style={tw`text-sm text-gray-500`}>{item.time}</Text>
-                  <Text style={tw`text-sm text-gray-500`}>⭐ {item.rating}</Text>
-                  <Text style={tw`text-lg font-bold`}>{item.price}</Text>
+                <Text style={tw`mt-2 font-bold text-lg`}>
+                  {item.name}
+                </Text>
+                <Text style={tw`text-gray-500 text-sm`}>
+                 Stok : {item.stock}
+                </Text>
+
+                <View style={tw`flex-row justify-between items-center mt-2`}>
+                  <Text style={tw`text-sm font-bold text-center`}>
+                    Rp {item.price}
+                  </Text>
+                  <TouchableOpacity
+                    style={tw`mt-2 bg-green-500 p-2 rounded-md flex-row justify-center items-center`}
+                    onPress={() => Alert.alert("Pesanan", `Anda memesan ${item.name}`)}
+                  >
+                    <Ionicons name="cart" size={20} color="white" style={tw`mr-2`} />
+                    <Text style={tw`text-white text-sm font-bold`}>Pesan</Text>
+                  </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={tw`bg-green-500 p-2 rounded-full`}>
-                  <Ionicons name="add" size={20} color="white" />
-                </TouchableOpacity>
               </View>
             )}
-          /> */}
+          />
+
         </View>
       </LinearGradient>
+      </ScrollView>
     </SafeAreaView>
   );
 };
