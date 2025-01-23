@@ -1,10 +1,11 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView, ImageBackground } from 'react-native';
+import { View, Image, StyleSheet, TouchableOpacity, ScrollView, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import tw from 'twrnc';
 import { LinearGradient } from 'expo-linear-gradient';
+import Text from '../Shared/Text';
 
 export default function Start() {
   const navigation = useNavigation();

@@ -1,6 +1,5 @@
 import { 
   View, 
-  Text, 
   Image, 
   TouchableOpacity, 
   TextInput, 
@@ -20,6 +19,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Google from 'expo-auth-session/providers/google';
 import tw from 'twrnc';
+import Text from '../Shared/Text';
 
 export default function Signin() {
   const [email, setEmail] = useState('');
@@ -130,7 +130,7 @@ export default function Signin() {
         } else if (userData.role === "buyer") {
           navigation.replace("MainApp"); // Pembeli diarahkan ke MainApp
         } else {
-          Alert.alert("Error", "Invalid role. Contact support.", [{ text: "OK" }]);
+          Alert.alert("Pesen!", "Makan Enak Hati Senang", [{ text: "OK" }]);
         }
       } else {
         Alert.alert("Error", "User data not found in Firestore.", [{ text: "OK" }]);
@@ -188,10 +188,6 @@ export default function Signin() {
       }
     }
   }, [response]);
-
-  const loginWithGoogle = () => {
-    promptAsync();
-  };
 
   return (
     <SafeAreaView style={tw`flex-1 bg-white`}>
