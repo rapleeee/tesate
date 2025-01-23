@@ -1,24 +1,10 @@
-import {
-  View,
-  Text,
-  Image,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  Alert,
-  Pressable,
-  KeyboardAvoidingView,
-} from "react-native";
+import { View, Text, Image, TextInput, TouchableOpacity, ScrollView, Alert, Pressable, KeyboardAvoidingView } from "react-native";
 import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation } from "@react-navigation/native";
 import { auth, db } from "../../firebase";
-import {
-  createUserWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithCredential,
-} from "firebase/auth";
+import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithCredential} from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { Ionicons } from "react-native-vector-icons";
 import tw from "twrnc";
@@ -87,62 +73,30 @@ const Signup = () => {
   
 
 
-  const signInWithGoogle = async () => {
-    try {
-      const result = await Google.logInAsync({
-        androidClientId: '826300876657-lk3bji4sc7sj7i7iptdcs5eqehnmkbg7.apps.googleusercontent.com',
-        iosClientId: '826300876657-lk3bji4sc7sj7i7iptdcs5eqehnmkbg7.apps.googleusercontent.com', // Jika Anda menggunakan iOS
-        expoClientId: '826300876657-lk3bji4sc7sj7i7iptdcs5eqehnmkbg7.apps.googleusercontent.com',
-      });
-
-      if (result.type === "success") {
-        const { idToken, accessToken } = result;
-        const credential = GoogleAuthProvider.credential(idToken, accessToken);
-        const userCredential = await signInWithCredential(auth, credential);
-        const user = userCredential.user;
-
-        if (userCredential.additionalUserInfo.isNewUser) {
-          await setDoc(doc(db, "users", user.uid), {
-            fullname: user.displayName,
-            email: user.email,
-            phoneNumber: user.phoneNumber || "",
-            role: "user",
-          });
-        }
-
-        navigation.replace("MainApp");
-      } else {
-        return { cancelled: true };
-      }
-    } catch (error) {
-      Alert.alert("Google Sign-In Error", error.message);
-    }
-  };
-
   return (
     <SafeAreaView style={tw`flex-1 bg-white`}>
       <ScrollView contentContainerStyle={tw`flex-grow`}>
         <StatusBar />
         <KeyboardAvoidingView style={tw`flex-1`}>
-          <View style={tw`absolute top-0 left-0 right-0`}></View>
-          <View style={tw`mt-40`}>
+          <View style={tw`flex-1`}>
             <Image
-              source={require("./../assets/SignUpPage/Group108.png")}
-              style={tw`h-20 w-20 self-center -mt-16`}
+              source={require("./../assets/sateh.png")}
+              style={tw`h-30 w-30 self-center `}
             />
-            <View>
-              <Text style={tw`text-center text-2xl text-gray-700 mb-6`}>
-                Sign Up
+            <View style={tw`flex-col items-center justify-center mx-12`}>
+              <Text style={tw`text-center font-bold text-2xl text-gray-700 mb-2`}>
+                Daftar Dulu
+              </Text>
+              <Text style={tw`text-sm text-center text-gray-700 mb-8`}>
+                 Daftarin akun kamu disini, isi yang lengkap ya data yang aku minta, jangan sampe ngga!
               </Text>
             </View>
 
-            <Text style={tw`text-sm text-gray-700 ml-12 mb-2`}>
-              Daftar akun Anda
-            </Text>
 
             <TextInput
               style={tw`mx-12 mt-1 mb-2 p-2 border border-gray-400 rounded-lg`}
               placeholder="Nama Lengkap"
+              placeholderTextColor={"darkgrey"}
               onChangeText={(text) => setFullname(text)}
               autoFocus
             />
@@ -150,12 +104,14 @@ const Signup = () => {
             <TextInput
               style={tw`mx-12 mt-1 mb-2 p-2 border border-gray-400 rounded-lg`}
               placeholder="Alamat Email"
+              placeholderTextColor={"darkgrey"}
               onChangeText={(text) => setEmail(text)}
             />
 
             <TextInput
               style={tw`mx-12 mt-1 mb-2 p-2 border border-gray-400 rounded-lg`}
               placeholder="Nomor Handphone"
+              placeholderTextColor={"darkgrey"}
               onChangeText={(text) => setPhoneNumber(text)}
             />
 
@@ -165,6 +121,7 @@ const Signup = () => {
               <TextInput
                 style={tw`flex-1`}
                 placeholder="Password"
+                placeholderTextColor={"darkgrey"}
                 secureTextEntry={secureTextEntry}
                 onChangeText={(text) => setPassword(text)}
               />
@@ -181,37 +138,15 @@ const Signup = () => {
             </View>
 
             <Pressable
-              style={tw`bg-red-700 p-3 mx-12 my-2 rounded-full shadow-lg`}
+              style={tw`bg-[#5CB85C] p-3 mx-12 my-2 rounded-xl shadow-lg`}
               onPress={register}
             >
               <Text style={tw`text-white text-center text-sm`}>Daftar</Text>
             </Pressable>
 
-            <View style={tw`flex-col flex items-center justify-center`}>
-              <Text style={tw`text-center text-gray-600 my-2 text-xs`}>
-                atau
-              </Text>
-              <Pressable
-                style={tw`flex-row items-center justify-center bg-white border border-gray-400 mt-2 p-2 w-70 rounded-lg shadow-lg`} onPress={signInWithGoogle}
-              >
-                <Image
-                  source={require("./../assets/google-logo.webp")}
-                  style={tw`w-4 h-4 mr-2`}
-                />
-                <Text style={tw`text-sm text-gray-700`}>
-                  Masuk dengan Google
-                </Text>
-              </Pressable>
-              <Pressable style={tw`flex-row items-center justify-center bg-white border border-gray-400 mt-2 p-2 w-70 rounded-lg shadow-lg`} onPress={signInWithGoogle}>
-            <Image
-              source={require("./../assets/LoginPage/fb.png")}
-              style={tw`w-4 h-4 mr-2`}
-            />
-            <Text style={tw`text-sm text-gray-700`}>Masuk dengan Facebook</Text>
-          </Pressable>
-            </View>
+            
 
-            <View style={tw`flex-row justify-center my-4`}>
+            <View style={tw`flex-row justify-center `}>
               <Text style={tw`text-xs`}>Sudah punya akun?</Text>
               <Text
                 style={tw`text-blue-700 ml-1 text-xs`}

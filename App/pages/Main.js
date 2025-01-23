@@ -23,9 +23,9 @@ const MainApp = () => {
   useEffect(() => {
     const getGreeting = () => {
       const hour = new Date().getHours();
-      if (hour < 12) return "Selamat Pagi";
-      else if (hour < 18) return "Selamat Sore";
-      else return "Selamat Malam";
+      if (hour < 12) return "Pagi";
+      else if (hour < 18) return "Sore";
+      else return "Malam";
     };
 
     const fetchLocation = async () => {
@@ -93,38 +93,38 @@ const MainApp = () => {
   }, [selectedCategory]);
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-white`}>
+    <SafeAreaView style={tw`flex-1`}>
     <ScrollView>
       <StatusBar />
-      <LinearGradient colors={["#5A2E02FF", "#D2D0CFFF"]} style={tw`flex-1`}>
         <View style={tw`px-4 py-2`}>
           <View style={tw`flex-row justify-center items-center mb-4`}>
-            <Text style={tw`text-sm text-neutral-200`}>{location}</Text>
+            <Text style={tw`text-sm text-neutral-900`}>{location}</Text>
           </View>
           <View style={tw`mb-2`}>
-            <Text style={tw`text-xl font-bold text-neutral-200`}>
+            <Text style={tw`text-xl font-bold text-neutral-900`}>
               {greeting}, {fullname}
             </Text>
           </View>
           <View style={tw`flex-row items-center bg-gray-200 p-2 rounded-lg mb-4`}>
             <TextInput
-              placeholder="Cari Makan Minum"
+              placeholder="Cari Makan Minum..."
+              placeholderTextColor="darkgray"
               style={tw`flex-1 px-4`}
             />
-            <Ionicons name="search" size={20} color="gray" />
+            <Ionicons name="search" size={20} color="gray"  />
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {categories.map((category) => (
               <TouchableOpacity
                 key={category}
                 style={tw`px-4 py-2 rounded-lg ${selectedCategory === category
-                  ? "bg-green-500"
-                  : "bg-gray-200"
+                  ? "bg-[#5CB85C]"
+                  : "bg-[#5CB85C] opacity-50"
                   } mr-2`}
                 onPress={() => setSelectedCategory(category)}
               >
                 <Text
-                  style={tw`${selectedCategory === category ? "text-white" : "text-black"
+                  style={tw`${selectedCategory === category ? "text-white" : "text-black opacity-100"
                     }`}
                 >
                   {category}
@@ -137,10 +137,10 @@ const MainApp = () => {
             data={items.filter((item) => selectedCategory === "Recommended" || item.category === selectedCategory)}
             keyExtractor={(item) => item.id.toString()}
             numColumns={2} // Menampilkan 2 kolom
-            columnWrapperStyle={tw`justify-between`} // Menjaga jarak antar kolom
+            columnWrapperStyle={tw`justify-between mx-1`} // Menjaga jarak antar kolom
             renderItem={({ item }) => (
               <View
-                style={tw`bg-white rounded-xl shadow-lg mb-4 w-[47%] mt-4 p-2`}
+                style={tw`bg-white rounded-xl shadow-lg mb-4 w-[48%] mt-4 p-2`}
               >
                 <Image
                   source={item.image}
@@ -153,16 +153,15 @@ const MainApp = () => {
                  Stok : {item.stock}
                 </Text>
 
-                <View style={tw`flex-row justify-between items-center mt-2`}>
+                <View style={tw`flex-row justify-between items-center `}>
                   <Text style={tw`text-sm font-bold text-center`}>
                     Rp {item.price}
                   </Text>
                   <TouchableOpacity
-                    style={tw`mt-2 bg-green-500 p-2 rounded-md flex-row justify-center items-center`}
+                    style={tw`w-12 bg-[#5CB85C] p-2 rounded-md items-center`}
                     onPress={() => Alert.alert("Pesanan", `Anda memesan ${item.name}`)}
                   >
-                    <Ionicons name="cart" size={20} color="white" style={tw`mr-2`} />
-                    <Text style={tw`text-white text-sm font-bold`}>Pesan</Text>
+                    <Ionicons name="cart" size={20} color="white"  />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -170,7 +169,6 @@ const MainApp = () => {
           />
 
         </View>
-      </LinearGradient>
       </ScrollView>
     </SafeAreaView>
   );

@@ -197,11 +197,12 @@ export default function Signin() {
     <SafeAreaView style={tw`flex-1 bg-white`}>
       <ScrollView>
         <StatusBar />
-        <Image source={require("./../assets/SignUpPage/Group108.png")} style={tw`h-20 w-20 self-center mt-20`} />
-        <View style={tw`items-center mt-2`}>
-          <Text style={tw`text-2xl font-bold text-gray-700 mb-6`}>Let's Sign In</Text>
-          <Text style={tw`text-sm text-gray-700`}>Masuk ke Akun Anda</Text>
+        <Image source={require("./../assets/sateh.png")} style={tw`h-30 w-30 self-center mt-20`} />
+        <View style={tw`items-center`}>
+          <Text style={tw`text-2xl font-bold text-gray-700`}>Login dulu kali ah</Text>
+          <Text style={tw`text-sm text-gray-700 mt-4`}>Masuk pake akun kamu yang udah didaftarin ya!</Text>
         </View>
+
         <TextInput
           style={tw`mx-12 mt-2 p-2 border border-gray-400 rounded-lg`}
           value={email}
@@ -223,24 +224,18 @@ export default function Signin() {
         <View style={tw`flex-row justify-between mx-12 mt-2`}>
           <View style={tw`flex-row items-center`}>
             <TouchableOpacity onPress={toggleRememberMe}>
-              <Ionicons name={isRemembered ? "checkbox" : "checkbox-outline"} size={16} color="#BB1624" />
+              <Ionicons name={isRemembered ? "checkbox" : "checkbox-outline"} size={16} color="#5CB85C" />
             </TouchableOpacity>
-            <Text style={tw`ml-2 text-xs text-gray-600`}>Ingat Saya</Text>
+            <Text style={tw`ml-2 text-xs text-gray-600`}>Ingatin Akunku</Text>
           </View>
           <TouchableOpacity onPress={resetPassword}>
             <Text style={tw`text-xs text-blue-600`}>Lupa Password?</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={tw`bg-red-700 h-10 mx-12 mt-8 rounded-xl justify-center items-center shadow-lg`} onPress={login}>
-          <Text style={tw`text-white font-bold text-sm`}>Masuk</Text>
+        <TouchableOpacity style={tw`bg-[#5CB85C] h-10 mx-12 mt-8 rounded-xl justify-center items-center shadow-lg`} onPress={login}>
+          <Text style={tw`text-white text-sm`}>Masuk</Text>
         </TouchableOpacity>
-        <View style={tw`items-center mt-2`}>
-          <Text style={tw`text-gray-600 text-xs`}>atau</Text>
-          <Pressable style={tw`flex-row items-center justify-center bg-white border border-gray-400 mt-2 p-2 w-70 rounded-lg shadow-lg`} onPress={loginWithGoogle}>
-            <Image source={require("./../assets/google-logo.webp")} style={tw`w-4 h-4 mr-2`} />
-            <Text style={tw`text-sm text-gray-700`}>Masuk dengan Google</Text>
-          </Pressable>
-        </View>
+        
         <View style={tw`flex-row justify-center mt-2`}>
           <Text style={tw`text-xs`}>Belum punya akun? </Text>
           <Text style={tw`text-xs text-blue-600`} onPress={() => navigation.navigate("signup")}>Daftar</Text>

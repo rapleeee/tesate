@@ -17,8 +17,8 @@ const TabBarIcon = ({ iconName, label, focused, additionalStyle = {} }) => {
 
   return (
     <View style={{ alignItems: "center", justifyContent: "center", marginTop: 5, ...additionalStyle }}>
-      <IconComponent name={iconName} size={24} color={focused ? "green" : "grey"} />
-      <Text style={{ fontSize: 11, color: focused ? "green" : "grey" }}>{label}</Text>
+      <IconComponent name={iconName} size={24} color={focused ? "#5CB85C" : "grey"} />
+      <Text style={{ fontSize: 11, color: focused ? "#5CB85C" : "grey" }}>{label}</Text>
     </View>
   );
 };
