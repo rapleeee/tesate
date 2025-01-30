@@ -17,12 +17,12 @@ const MainApp = () => {
   const [fullname, setFullname] = useState("Guest");
   const [location, setLocation] = useState("Fetching location...");
   const [categories, setCategories] = useState([
-    "Recommended",
-    "Food",
-    "Drinks",
-    "Snacks",
+    "Rekomendasi",
+    "Makanan",
+    "Minuman",
+    "Cemilan",
   ]);
-  const [selectedCategory, setSelectedCategory] = useState("Food");
+  const [selectedCategory, setSelectedCategory] = useState("Makanan");
   const [items, setItems] = useState([]); 
   const [searchQuery, setSearchQuery] = useState(""); 
 
@@ -83,7 +83,7 @@ const MainApp = () => {
           price: doc.data().price || "Gada Harga",
           image: { uri: doc.data().image },
           stock: doc.data().stock,
-          category: doc.data().category || "Food",
+          category: doc.data().category || "Makanan",
         }));
     
         // Ambil data dari koleksi "Minuman"
@@ -95,7 +95,7 @@ const MainApp = () => {
           price: doc.data().price || "Gada Harga",
           image: { uri: doc.data().image },
           stock: doc.data().stock,
-          category: doc.data().category || "Drinks",
+          category: doc.data().category || "Minuman",
         }));
     
         // Gabungkan data "Makanan" dan "Minuman"
@@ -185,7 +185,7 @@ const MainApp = () => {
           >
             <Image source={item.image} style={tw`w-full h-24 rounded-lg`} />
             <Text
-              style={tw`mt-2 font-bold text-sm text-ellipsis`}
+              style={tw`mt-2 font-bold text-sm `}
               numberOfLines={1}
             >
               {item.name}

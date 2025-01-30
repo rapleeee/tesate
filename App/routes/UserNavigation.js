@@ -113,7 +113,7 @@ const UserNavigation = () => {
             tabBarIcon: ({ focused }) => (
               <TabBarIcon
                 iconName="message-badge"
-                label="Information"
+                label="Informasi"
                 focused={focused}
                 additionalStyle={{ marginRight: 15 }}
               />
@@ -140,7 +140,7 @@ const UserNavigation = () => {
             tabBarIcon: ({ focused }) => (
               <TabBarIcon
                 iconName="circle-notifications"
-                label="Notification"
+                label="Notifikasi"
                 focused={focused}
               />
             ),
@@ -153,7 +153,7 @@ const UserNavigation = () => {
             tabBarIcon: ({ focused }) => (
               <TabBarIcon
                 iconName="account-circle"
-                label="Account"
+                label="Akun"
                 focused={focused}
               />
             ),

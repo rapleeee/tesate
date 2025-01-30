@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, } from 'react-native';
 import { FontAwesome, FontAwesome5, MaterialCommunityIcons, FontAwesome6, MaterialIcons } from '@expo/vector-icons';
+import Text from '../Shared/Text';
 
 const TabBarIcon = ({ iconName, label, focused, additionalStyle = {} }) => {
   let IconComponent;

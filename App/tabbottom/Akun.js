@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, ScrollView, Image, TouchableOpacity,
+  View, ScrollView, Image, TouchableOpacity,
   Alert, RefreshControl,
-  ImageBackground
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -11,31 +10,18 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { auth, db } from '../../firebase';
 import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import tw from 'twrnc';
-import * as ImagePicker from 'expo-image-picker'; // Import Image Picker
-import { Modal, TextInput } from 'react-native-paper';
-import { getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
+import Text from '../Shared/Text';
 
 
 export default function Akun() {
   const navigation = useNavigation();
   const [user, setUser] = useState(null);
   const [userUID, setUserUID] = useState('');
-  const [userEmail, setUserEmail] = useState('');
-  const [totalScore, setTotalScore] = useState(null);
   const [fullname, setFullName] = useState('');
-  const [profileImage, setProfileImage] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [businessName, setBusinessName] = useState('');
-  const [coursesCompleted, setCoursesCompleted] = useState(0);
-  const [modulesTaken, setModulesTaken] = useState(0);
-  const [totalTimeSpent, setTotalTimeSpent] = useState(0);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('Email belum terdaftar');
+  const [address, setAddress] = useState('Alamat belum terdaftar');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [streak, setStreak] = useState(0);
-  const [totalXP, setTotalXP] = useState(0);
-  const [xp, setXp] = useState(0);
-  const [totalModules, setTotalModules] = useState(0);
 
 
   const fetchUserData = async (uid) => {
@@ -46,11 +32,9 @@ export default function Akun() {
       if (userDoc.exists()) {
         const userData = userDoc.data();
         setFullName(userData.fullname || "");
-        setProfileImage(userData.profileImage || null);
-        setStreak(userData.streak || 0);  // Mengambil data streak
-        setXp(userData.xp || 0);  // Mengambil total XP
-        setTotalModules(userData.coursesJoined ? userData.coursesJoined.length : 0); // Menghitung jumlah total modules
-        setBusinessName(userData.businessName || ""); // Load businessName from Firestore
+        setEmail(userData.email || "Kamu belum set email");
+        setPhoneNumber(userData.phoneNumber || "");
+        setAddress(userData.address || "Kamu belum set alamat");
       }
     } catch (error) {
       console.error("Failed to load user data:", error);
@@ -77,37 +61,7 @@ export default function Akun() {
       }
     }, [userUID])
   );
-  const pickImage = async () => {
-    let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (permissionResult.granted === false) {
-      Alert.alert("Permission to access media library is required!");
-      return;
-    }
-
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      try {
-        const downloadURL = await uploadImage(result.assets[0].uri); // Unggah gambar dan dapatkan URL
-        setProfileImage(downloadURL); // Perbarui gambar di UI
-
-        // Simpan URL ke Firestore
-        const userDocRef = doc(db, "users", auth.currentUser.uid);
-        await updateDoc(userDocRef, { profileImage: downloadURL });
-
-        Alert.alert("Success", "Profile image updated successfully!");
-      } catch (error) {
-        console.error("Error uploading image:", error);
-        Alert.alert("Error", "Failed to upload image. Please try again.");
-      }
-    }
-  };
-
+  
 
   const handleRefresh = () => {
     setIsRefreshing(true);
@@ -119,27 +73,7 @@ export default function Akun() {
   };
 
 
-  const uploadImage = async (uri) => {
-    try {
-      const storage = getStorage();
-      const response = await fetch(uri);
-      const blob = await response.blob();
-
-      // Buat referensi di Firebase Storage
-      const filename = `profileImages/${auth.currentUser.uid}_${new Date().getTime()}.jpg`;
-      const storageRef = ref(storage, filename);
-
-      // Unggah blob ke Storage
-      await uploadBytes(storageRef, blob);
-
-      // Dapatkan URL gambar yang telah diunggah
-      const downloadURL = await getDownloadURL(storageRef);
-      return downloadURL;
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      throw error;
-    }
-  };
+  
 
   const handleLogout = () => {
     auth.signOut()
@@ -154,108 +88,37 @@ export default function Akun() {
   };
 
   // Fungsi untuk menambah modul yang telah diambil oleh user
-  const addModuleToUser = async (uid, moduleId) => {
-    const userRef = doc(db, 'users', uid);
-    try {
-      await updateDoc(userRef, {
-        modulesTaken: arrayUnion(moduleId)
-      });
-      console.log("Module added successfully");
-    } catch (error) {
-      console.error("Failed to add module:", error);
-    }
-  };
 
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-gray-100`}>
+    <SafeAreaView style={tw`flex-1 bg-[#5CB85C]  `}>
       <ScrollView refreshControl={
         <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
       }
       >
-        <View style={tw`relative`}>
-          <ImageBackground source={require("./../assets/AkunPage/cardAcc.png")} style={tw`w-full h-55`}>
-            <View style={tw`flex flex-row items-center justify-start p-8 absolute top-5 left-0 right-0 z-10 mt-4`}>
-              <TouchableOpacity onPress={pickImage}>
-                <Image
-                  source={profileImage ? { uri: profileImage } : require("./../assets/logoAssets/sarayaiconsquare.png")}
-                  style={tw`h-18 w-18 rounded-full border-2 border-[#EF980C]`}
-                />
-              </TouchableOpacity>
-              <View style={tw`flex flex-col items-center justify-between gap-26`}>
-                <View style={tw`ml-4`}>
-                  <Text style={tw`text-white text-xl font-bold`}>{fullname}</Text>
-                  <Text style={tw`text-white text-base`}>{businessName}</Text>
-                  <TouchableOpacity onPress={() => navigation.navigate("editAccount")}>
-                    <Text style={tw`text-white font-semibold`}>Ubah</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </ImageBackground>
+
+        <View style={tw`flex-row items-center justify-between px-4`}>
+          <AntDesign name='arrowleft' size={24} color={'white'} />
+          <Text style={tw`text-2xl text-neutral-100 font-bold text-center`}>Akun</Text>
+          <AntDesign name='setting' size={24} color={'white'} />
         </View>
-        <View style={tw`p-6 `}>
-          <Text style={tw`text-[#BB1624] font-bold text-lg`}>Statistik</Text>
-          <View style={tw`flex-row flex-wrap justify-between items-center p-6`}>
-            <View style={tw`flex-row items-center w-[45%] gap-2`}>
-              <View style={tw`w-14 h-14 bg-[#BB1624] rounded-full justify-center items-center`}>
-                <Ionicons name="book-outline" size={24} color="white" />
-              </View>
-              <View style={tw`flex flex-col items-start`}>
-                <Text style={tw`text-lg font-bold mt-2`}>{totalModules}</Text>
-                <Text style={tw`text-sm text-gray-600`}>Lesson</Text>
-              </View>
+
+        <View style={tw`bg-neutral-100 rounded-t-3xl w-full h-full flex items-start justify-center mt-24 p-4`}>
+          <View style={tw`w-full`}>
+            <View style={tw`bg-neutral-100 py-2 px-4 rounded-lg shadow-md border border-gray-200 mb-2`}>
+              <Text style={tw`text-base text-neutral-700 text-left`}>{fullname}</Text>
             </View>
-            <View style={tw`flex-row items-center w-[45%] gap-2`}>
-              <View style={tw`w-14 h-14 bg-[#BB1624] rounded-full justify-center items-center`}>
-                <Ionicons name="flash-outline" size={24} color="white" />
-              </View>
-              <View style={tw`flex flex-col items-start`}>
-                <Text style={tw`text-lg font-bold mt-2`}>{streak}</Text>
-                <Text style={tw`text-sm text-gray-600`}>Streak</Text>
-              </View>
+            <View style={tw`bg-neutral-100 py-2 px-4 rounded-lg shadow-md border border-gray-200 mb-2`}>
+              <Text style={tw`text-base text-neutral-700 text-left`}>{email}</Text>
             </View>
-            <View style={tw`flex-row items-center w-[45%] gap-2 mt-8`}>
-              <View style={tw`w-14 h-14 bg-[#BB1624] rounded-full justify-center items-center`}>
-                <Image source={require('./../assets/homePage/XP1.png')} style={tw`w-8 h-8`} />
-              </View>
-              <View style={tw`flex flex-col items-start`}>
-                <Text style={tw`text-lg font-bold mt-2`}>{xp}</Text>
-                <Text style={tw`text-sm text-gray-600`}>XP</Text>
-              </View>
-            </View>
-            <View style={tw`flex-row items-center w-[45%] gap-2`}>
-              <View style={tw`w-14 h-14 bg-[#BB1624] rounded-full justify-center items-center`}>
-                <MaterialCommunityIcons name="checkbox-multiple-marked-circle-outline" size={24} color="white" />
-              </View>
-              <View style={tw`flex flex-col items-start`}>
-                <Text style={tw`text-lg font-bold mt-2`}>10</Text>
-                <Text style={tw`text-sm text-gray-600`}>Akurasi</Text>
-              </View>
+            <View style={tw`bg-neutral-100 py-2 px-4 mb-24 rounded-lg shadow-md border border-gray-200 mb-2`}>
+              <Text style={tw`text-base text-neutral-700 text-left`}>{address}</Text>
             </View>
           </View>
-
-          <Text style={tw`text-red-500 font-bold mb-2`}>Akun</Text>
-          <OptionItem text="Detail Bisnis" onPress={() => navigation.navigate('bisnisSurvey')} />
-          <OptionItem text="Change Password" onPress={() => navigation.navigate('ChangePassword')} />
-
-
-          <Text style={tw`text-red-500 font-bold mt-6 mb-2`}>Tentang</Text>
-          <OptionItem text="Keuntungan Belajar di Saraya" onPress={() => navigation.navigate('accordionScreen')} />
-          <OptionItem text="Syarat dan Ketentuan" onPress={() => { }} />
-          <OptionItem text="Kebijakan Privasi" onPress={() => { }} />
-
-          <View style={tw`flex-row justify-between items-center mt-2 px-4`}>
-            <Text style={tw`text-gray-500 text-xs`}>Version 1.1</Text>
-            <Text style={tw`text-gray-500 text-xs`}>#TogetherWeShapeTheFuture</Text>
+          <View style={tw`my-24`}>
+            <Text>Kebijakan Privasi</Text>
+            <Text>Riwayat Orderan</Text>
           </View>
-
-          <TouchableOpacity onPress={handleLogout}>
-            <View style={tw`flex-row p-4 justify-center items-center w-full bg-[#BB1624] rounded-2xl mt-8 mb-8`}>
-              <Text style={tw`text-white font-bold`}>Keluar</Text>
-            </View>
-          </TouchableOpacity>
-
         </View>
 
 
@@ -263,14 +126,4 @@ export default function Akun() {
     </SafeAreaView>
   );
 }
-
-const OptionItem = ({ text, onPress }) => (
-  <TouchableOpacity style={tw`flex-row justify-between items-center py-3 border-b border-gray-200`} onPress={onPress}>
-    <View style={tw`flex-row items-center`}>
-      <View style={tw`bg-gray-300 w-8 h-8 rounded-full mr-4`} />
-      <Text style={tw`text-black font-medium`}>{text}</Text>
-    </View>
-    <AntDesign name="right" size={15} color="black" />
-  </TouchableOpacity>
-);
 
