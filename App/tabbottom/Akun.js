@@ -31,7 +31,7 @@ export default function Akun() {
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        setFullName(userData.fullname || "Guest");
+        setFullName(userData.fullname || "Tamu");
         setEmail(userData.email || "Kamu belum set email");
         setPhoneNumber(userData.phoneNumber || "");
         setAddress(userData.address || "Kamu belum set alamat");
@@ -91,37 +91,69 @@ export default function Akun() {
 
 
   return (
-    <SafeAreaView style={tw`flex-1 bg-[#5CB85C]  `}>
-      <ScrollView refreshControl={
-        <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
-      }
+    <SafeAreaView style={tw` bg-[#5CB85C]`}>
+      <ScrollView
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+        }
       >
-
-        <View style={tw`flex-row items-center justify-between px-4`}>
-          <AntDesign name='arrowleft' size={24} color={'white'} />
-          <Text style={tw`text-2xl text-neutral-100 font-bold text-center`}>Akun</Text>
-          <AntDesign name='setting' size={24} color={'white'} />
+        <View style={tw`flex-row items-center justify-between px-4 `}>
+          <AntDesign name="arrowleft" size={24} color={"white"} />
+          <Text style={tw`text-2xl text-neutral-100 font-bold text-center`}>
+            Akun
+          </Text>
+          <AntDesign name="setting" size={24} color={"white"} />
         </View>
 
-        <View style={tw`bg-neutral-100 rounded-t-3xl w-full h-full flex items-start justify-center mt-24 p-4`}>
-          <View style={tw`w-full`}>
-            <View style={tw`bg-neutral-100 py-2 px-4 rounded-lg shadow-md border border-gray-200 mb-2`}>
-              <Text style={tw`text-base text-neutral-700 text-left`}>{fullname}</Text>
+        <View
+          style={tw`bg-neutral-100 rounded-t-3xl w-full h-full items-center flex mt-32 px-8 py-24`}
+        >
+          <View style={tw`w-full `}>
+            <View
+              style={tw`bg-neutral-100 py-2 px-4 rounded-lg shadow-md border border-gray-200 mb-2`}
+            >
+              <Text style={tw`text-base text-neutral-700 text-left`}>
+                {fullname}
+              </Text>
             </View>
-            <View style={tw`bg-neutral-100 py-2 px-4 rounded-lg shadow-md border border-gray-200 mb-2`}>
-              <Text style={tw`text-base text-neutral-700 text-left`}>{email}</Text>
+            <View
+              style={tw`bg-neutral-100 py-2 px-4 rounded-lg shadow-md border border-gray-200 mb-2`}
+            >
+              <Text style={tw`text-base text-neutral-700 text-left`}>
+                {email}
+              </Text>
             </View>
-            <View style={tw`bg-neutral-100 py-2 px-4 mb-24 rounded-lg shadow-md border border-gray-200 mb-2`}>
-              <Text style={tw`text-base text-neutral-700 text-left`}>{address}</Text>
+            <View
+              style={tw`bg-neutral-100 py-2 px-4 mb-24 rounded-lg shadow-md border border-gray-200 mb-2`}
+            >
+              <Text style={tw`text-base text-neutral-700 text-left`}>
+                {address}
+              </Text>
             </View>
-      <TouchableOpacity style={tw`bg-neutral-800 rounded-t-3xl w-full h-16 flex items-start justify-center mt-24 p-4`} onPress={handleLogout}>
-        <Text>Logout</Text>
-        </TouchableOpacity>
+            <View style={tw`items-start gap-y-4 mt-6`}>
+              <View style={tw`flex-row justify-between items-center w-full`}>
+                <Text>Kebijakan Privasi</Text>
+                <AntDesign name="right" size={18} color="grey" />
+              </View>
+              <View style={tw`flex-row justify-between items-center w-full`}>
+                <Text>Riwayat Orderan</Text>
+                <AntDesign name="right" size={18} color="grey" />
+              </View>
+            </View>
+            <TouchableOpacity
+              style={tw`bg-neutral-800 rounded-lg w-full h-12 flex items-center justify-center mt-18`}
+              onPress={handleLogout}
+            >
+              <Text style={tw`text-white`}>Edit Profile</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={tw`bg-red-700 rounded-lg w-full h-12 flex items-center justify-center mt-2`}
+              onPress={handleLogout}
+            >
+              <Text style={tw`text-white`}>Logout</Text>
+            </TouchableOpacity>
           </View>
-            <Text>Kebijakan Privasi</Text>
-            <Text>Riwayat Orderan</Text>
-          </View>
-
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
