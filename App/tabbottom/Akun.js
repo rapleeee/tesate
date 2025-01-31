@@ -31,7 +31,7 @@ export default function Akun() {
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        setFullName(userData.fullname || "");
+        setFullName(userData.fullname || "Guest");
         setEmail(userData.email || "Kamu belum set email");
         setPhoneNumber(userData.phoneNumber || "");
         setAddress(userData.address || "Kamu belum set alamat");
@@ -114,13 +114,13 @@ export default function Akun() {
             <View style={tw`bg-neutral-100 py-2 px-4 mb-24 rounded-lg shadow-md border border-gray-200 mb-2`}>
               <Text style={tw`text-base text-neutral-700 text-left`}>{address}</Text>
             </View>
+      <TouchableOpacity style={tw`bg-neutral-800 rounded-t-3xl w-full h-16 flex items-start justify-center mt-24 p-4`} onPress={handleLogout}>
+        <Text>Logout</Text>
+        </TouchableOpacity>
           </View>
-          <View style={tw`my-24`}>
             <Text>Kebijakan Privasi</Text>
             <Text>Riwayat Orderan</Text>
           </View>
-        </View>
-
 
       </ScrollView>
     </SafeAreaView>

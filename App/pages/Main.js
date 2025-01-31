@@ -74,7 +74,7 @@ const MainApp = () => {
 
     const fetchData = async () => {
       try {
-        // Ambil data dari koleksi "Makanan"
+        // Ambil data dari database "Makanan"
         const makananSnapshot = await getDocs(collection(db, "Makanan"));
         const makananItems = makananSnapshot.docs.map((doc) => ({
           id: doc.id,
@@ -86,7 +86,7 @@ const MainApp = () => {
           category: doc.data().category || "Makanan",
         }));
     
-        // Ambil data dari koleksi "Minuman"
+        // Ambil data dari database "Minuman"
         const minumanSnapshot = await getDocs(collection(db, "Minuman"));
         const minumanItems = minumanSnapshot.docs.map((doc) => ({
           id: doc.id,
