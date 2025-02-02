@@ -16,8 +16,6 @@ import Question from "../etc/Question";
 import AdminPanel from "../pages/AdminPanel";
 import TabBarIcon from "../Components/TabBarIcon";
 import EditAccount from "../Services/EditAccount";
-import FondationI from "../etc/Kuis/level1/FondationI";
-import TujuanKeuangan from "../etc/Kuis/level1/TujuanKeuangan";
 import NilaiUang from "../etc/Kuis/level1/NilaiUang";
 import DetailOrders from "../orders/DetailOrders";
 import CardOrders from "../orders/CardOrders";
@@ -81,7 +79,7 @@ const UserNavigation = () => {
           options={{
             tabBarIcon: ({ focused }) => (
               <TabBarIcon
-                iconName="message-badge"
+                iconName="information-circle"
                 label="Informasi"
                 focused={focused}
                 additionalStyle={{ marginRight: 15 }}
@@ -108,7 +106,7 @@ const UserNavigation = () => {
           options={{
             tabBarIcon: ({ focused }) => (
               <TabBarIcon
-                iconName="circle-notifications"
+                iconName="notifications"
                 label="Notifikasi"
                 focused={focused}
               />
