@@ -142,10 +142,8 @@ const UserNavigation = () => {
         <Stack.Screen name="tugas" component={Tugas}/>
         <Stack.Screen name="notification" component={Question}/>
         <Stack.Screen name="news" component={News}/>
-        <Stack.Screen name="LaporanKeuangan" component={LaporanKeuangan}/>
         <Stack.Screen name="adminPanel" component={AdminPanel}/>
         <Stack.Screen name="editAccount" component={EditAccount}/>
-        <Stack.Screen name="kuisNilaiUang" component={NilaiUang}/>
         <Stack.Screen name="detailOrders" component={DetailOrders}/>
         <Stack.Screen name="cardOrders" component={CardOrders}/>
 

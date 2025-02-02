@@ -14,7 +14,10 @@ const TabBarIcon = ({ iconName, label, focused, additionalStyle = {} }) => {
     IconComponent = MaterialIcons;
   } else if (iconName === 'information-circle') {
     IconComponent = Ionicons; // Gunakan Ionicons untuk information-circle
-  } else {
+  } else if (iconName === 'notifications') {
+    IconComponent = Ionicons; // Gunakan Ionicons untuk information-circle
+  }
+   else {
     IconComponent = FontAwesome6;
   }
 
