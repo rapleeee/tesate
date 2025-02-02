@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
+import { View, ScrollView, TouchableOpacity, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import tw from "twrnc";
+import Text from "../Shared/Text";
 
-export default function Notifications({ navigation }) {
+export default function Notifkasi({ navigation }) {
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
@@ -31,8 +32,8 @@ export default function Notifications({ navigation }) {
         {notifications.length === 0 ? (
           // Jika tidak ada notifikasi, tampilkan pesan ini
           <View style={tw`items-center`}>
-            <Ionicons name="notifications-outline" size={100} color="#B0B0B0" />
-            <Text style={tw`text-gray-500 mt-4`}>Belum ada notifikasi</Text>
+            <Ionicons name="alert-circle-outline" size={100} color="#B0B0B0" />
+            <Text style={tw`text-gray-500 mt-4`}>Belum ada notifikasi bang</Text>
           </View>
         ) : (
           // Jika ada notifikasi, tampilkan daftar notifikasi
