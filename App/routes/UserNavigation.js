@@ -52,6 +52,8 @@ import FondationI from "../etc/Kuis/level1/FondationI";
 import TujuanKeuangan from "../etc/Kuis/level1/TujuanKeuangan";
 import NilaiUang from "../etc/Kuis/level1/NilaiUang";
 import AsetdanLiabilitas from "../etc/Kuis/level1/AsetdanLiabilitas";
+import DetailOrders from "../orders/DetailOrders";
+import CardOrders from "../orders/CardOrders";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -214,6 +216,9 @@ const UserNavigation = () => {
         <Stack.Screen name="kuisTujuanKeuangan" component={TujuanKeuangan}/>
         <Stack.Screen name="kuisNilaiUang" component={NilaiUang}/>
         <Stack.Screen name="kuisAsetLiabilitas" component={AsetdanLiabilitas}/>
+        <Stack.Screen name="detailOrders" component={DetailOrders}/>
+        <Stack.Screen name="cardOrders" component={CardOrders}/>
+
         
       </Stack.Navigator>
    

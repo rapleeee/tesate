@@ -35,7 +35,7 @@ export default function Settings() {
   const fetchUserData = async (uid) => {
     const userData = await loadUserData(uid);
     if (userData) {
-      setUserEmail(userData.email);
+      setEmail(userData.email);
       setFullName(userData.fullname);
       setPhoneNumber(userData.phoneNumber || ''); 
       setProfileImage(userData.profileImage);
@@ -154,27 +154,7 @@ export default function Settings() {
           </View>
         </View>
 
-        <View style={tw`p-4`}>
-          <Text style={tw`text-red-500 font-bold mb-2`}>Akun</Text>
-          <OptionItem text="Detail Bisnis" onPress={() => navigation.navigate('bisnisSurvey')} />
-          <OptionItem text="Change Password" onPress={() => navigation.navigate('ChangePassword')} />
-          <OptionItem text="Lorem Ipsum" onPress={() => {}} />
-
-          <Text style={tw`text-red-500 font-bold mt-6 mb-2`}>Bantuan</Text>
-          <OptionItem text="Pusat Bantuan" onPress={() => {}} />
-          <OptionItem text="Laporan Kamu" onPress={() => {}} />
-
-          <Text style={tw`text-red-500 font-bold mt-6 mb-2`}>Tentang</Text>
-          <OptionItem text="Keuntungan Belajar di Saraya" onPress={() => {}} />
-          <OptionItem text="Panduan Saraya" onPress={() => {}} />
-          <OptionItem text="Syarat dan Ketentuan" onPress={() => {}} />
-          <OptionItem text="Kebijakan Privasi" onPress={() => {}} />
-
-          <View style={tw`flex-row justify-between items-center mt-2 px-4`}>
-            <Text style={tw`text-gray-500 text-xs`}>Version 1.1</Text>
-            <Text style={tw`text-gray-500 text-xs`}>#TogetherWeShapeTheFuture</Text>
-          </View>
-        </View>
+     
       </ScrollView>
 
       {/* Edit User Details Modal */}
@@ -218,12 +198,3 @@ export default function Settings() {
 }
 
 // Component for each option item
-const OptionItem = ({ text, onPress }) => (
-  <TouchableOpacity style={tw`flex-row justify-between items-center py-3 border-b border-gray-200`} onPress={onPress}>
-    <View style={tw`flex-row items-center`}>
-      <View style={tw`bg-gray-300 w-8 h-8 rounded-full mr-4`} />
-      <Text style={tw`text-black font-medium`}>{text}</Text>
-    </View>
-    <AntDesign name="right" size={15} color="black" />
-  </TouchableOpacity>
-);

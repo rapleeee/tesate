@@ -10,9 +10,11 @@ import { doc, getDoc } from "firebase/firestore";
 import { collection, getDocs } from "firebase/firestore";
 import tw from "twrnc";
 import Text from "../Shared/Text";
+import { useNavigation } from "@react-navigation/native";
 
 const MainApp = () => {
   const screenWidth = Dimensions.get("window").width;
+  const navigation = useNavigation();
   const [greeting, setGreeting] = useState("");
   const [fullname, setFullname] = useState("Guest");
   const [location, setLocation] = useState("Fetching location...");
@@ -79,7 +81,7 @@ const MainApp = () => {
         const makananItems = makananSnapshot.docs.map((doc) => ({
           id: doc.id,
           name: doc.data().name,
-          time: doc.data().cookingTime,
+          time: doc.data().cookingTime || "20",
           price: doc.data().price || "Gada Harga",
           image: { uri: doc.data().image },
           stock: doc.data().stock,
@@ -198,9 +200,7 @@ const MainApp = () => {
                 </Text>
                 <TouchableOpacity
                   style={tw`w-12 bg-[#5CB85C] p-2 rounded-md items-center`}
-                  onPress={() =>
-                    Alert.alert("Pesanan", `Anda memesan ${item.name}`)
-                  }
+                  onPress={() => navigation.navigate("detailOrders",{item})}
                 >
                   <Ionicons name="cart" size={20} color="white" />
                 </TouchableOpacity>

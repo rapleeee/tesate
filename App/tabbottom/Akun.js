@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import {
   View, ScrollView, Image, TouchableOpacity,
   Alert, RefreshControl,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -22,6 +24,7 @@ export default function Akun() {
   const [email, setEmail] = useState('Email belum terdaftar');
   const [address, setAddress] = useState('Alamat belum terdaftar');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [modalVisible, setModalVisible] = useState(false); 
 
 
   const fetchUserData = async (uid) => {
@@ -40,6 +43,18 @@ export default function Akun() {
       console.error("Failed to load user data:", error);
     }
   };
+
+   const updateUserDetails = async () => {
+      try {
+        const userDocRef = doc(db, 'users', userUID);
+        await updateDoc(userDocRef, { fullname, email, phoneNumber });
+        Alert.alert("Success", "Profile details updated successfully!");
+        setModalVisible(false); 
+      } catch (error) {
+        console.error("Error updating user details in Firestore: ", error);
+        Alert.alert("Error", "Failed to update profile details.");
+      }
+    };
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -72,9 +87,6 @@ export default function Akun() {
     }, 2000);
   };
 
-
-  
-
   const handleLogout = () => {
     auth.signOut()
       .then(() => {
@@ -86,9 +98,6 @@ export default function Akun() {
         Alert.alert("Logout error", error.message);
       });
   };
-
-  // Fungsi untuk menambah modul yang telah diambil oleh user
-
 
   return (
     <SafeAreaView style={tw` bg-[#5CB85C]`}>
@@ -142,7 +151,7 @@ export default function Akun() {
             </View>
             <TouchableOpacity
               style={tw`bg-neutral-800 rounded-lg w-full h-12 flex items-center justify-center mt-18`}
-              onPress={handleLogout}
+              onPress={() => setModalVisible(true)}
             >
               <Text style={tw`text-white`}>Edit Profile</Text>
             </TouchableOpacity>
@@ -154,6 +163,47 @@ export default function Akun() {
             </TouchableOpacity>
           </View>
         </View>
+        <Modal visible={modalVisible} animationType="slide">
+        <View style={tw`flex-1 justify-center items-center bg-white p-6`}>
+          <Text style={tw`text-lg font-bold mb-4`}>Edit Akun Kamu</Text>
+          <TextInput
+            style={tw`border border-gray-400 w-full p-2 rounded-lg mb-4`}
+            placeholder="Full Name"
+            value={fullname}
+            onChangeText={setFullName}
+          />
+          <TextInput
+            style={tw`border border-gray-400 w-full p-2 rounded-lg mb-4`}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <TextInput
+            style={tw`border border-gray-400 w-full p-2 rounded-lg mb-4`}
+            placeholder="Phone Number"
+            value={phoneNumber}
+            onChangeText={setPhoneNumber}
+          />
+          <TextInput
+            style={tw`border border-gray-400 w-full p-2 rounded-lg mb-4`}
+            placeholder="Alamat Lengkap ya"
+            value={address}
+            onChangeText={setAddress}
+          />
+          <TouchableOpacity
+            style={tw`bg-[#5CB85C] rounded-lg p-3 w-full mt-2`}
+            onPress={updateUserDetails}
+          >
+            <Text style={tw`text-white text-center`}>Save</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={tw`bg-red-500 rounded-lg p-3 w-full mt-2`}
+            onPress={() => setModalVisible(false)}
+          >
+            <Text style={tw`text-white text-center`}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
       </ScrollView>
     </SafeAreaView>
   );
