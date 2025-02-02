@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { View, ActivityIndicator } from 'react-native';
 import * as Font from 'expo-font';
 import UserNavigation from './App/routes/UserNavigation'; // Pastikan path ini benar
+import { CartProvider } from './App/orders/CartContext';
 
 export default function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -29,8 +30,11 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      <UserNavigation />
-    </NavigationContainer>
+    <CartProvider>
+      <NavigationContainer>
+        <UserNavigation />
+      </NavigationContainer>
+    </CartProvider>
+
   );
 }

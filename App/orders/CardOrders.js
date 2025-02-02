@@ -1,17 +1,18 @@
-import { View, TouchableOpacity, FlatList, Image } from 'react-native';
-import React from 'react';
+import { View, TouchableOpacity, FlatList, Image, ScrollView } from 'react-native';
+import React, { useContext } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import tw from 'twrnc';
 import { AntDesign, FontAwesome, Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Text from '../Shared/Text';
+import { CartContext } from './CartContext';
 
 const CardOrders = () => {
     const navigation = useNavigation();
     const route = useRoute();
     const { orders } = route.params || { orders: [] }; // Menerima data dari DetailOrders
-
+    const { cart } = useContext(CartContext);
     // Biaya tambahan
     const biayaAplikasi = 2000;
     const biayaOngkir = 5000;
@@ -19,6 +20,7 @@ const CardOrders = () => {
     // Hitung total harga pesanan
     const totalPesanan = orders.reduce((acc, item) => acc + (item.price * (item.count || 1)), 0);
     const totalBiaya = totalPesanan + biayaAplikasi + biayaOngkir;
+    
 
     return (
         <SafeAreaView>

@@ -1,18 +1,37 @@
 import { View, Image, TouchableOpacity, Alert } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import tw from 'twrnc';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Text from '../Shared/Text';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CartContext } from './CartContext';
+
 
 const DetailOrders = () => {
     const navigation = useNavigation();
     const route = useRoute(); // Pindahkan ke atas sebelum destructuring
-
     const { item, orders = [] } = route.params || {}; // Pastikan params tidak undefined
     const [count, setCount] = useState(1);
     const [stock, setStock] = useState(item?.stock || 0); // Tambahkan fallback jika item undefined
+    const [cart, setCart] = useState(CartContext);
+    
+
+    useEffect(() => {
+        const loadCart = async () => {
+            try {
+                const storedCart = await AsyncStorage.getItem('cart');
+                if (storedCart) {
+                    setCart(JSON.parse(storedCart));
+                }
+            } catch (error) {
+                console.error("Error loading cart: ", error);
+            }
+        };
+        loadCart();
+    }, []);
+
 
     const increaseCount = () => {
         if (count < stock) {
@@ -30,19 +49,46 @@ const DetailOrders = () => {
         }
     };
 
+    const saveCart = async (updatedCart) => {
+        try {
+            await AsyncStorage.setItem('cart', JSON.stringify(updatedCart));
+        } catch (error) {
+            console.error("Error saving cart: ", error);
+        }
+    };
+
+    const addToCart = async () => {
+        const existingItem = cart.find(cartItem => cartItem.id === item.id);
+        let updatedCart;
+
+        if (existingItem) {
+            updatedCart = cart.map(cartItem =>
+                cartItem.id === item.id ? { ...cartItem, count: cartItem.count + count } : cartItem
+            );
+        } else {
+            updatedCart = [...cart, { ...item, count }];
+        }
+
+        setCart(updatedCart);
+        await saveCart(updatedCart);
+        Alert.alert("Berhasil", `Anda telah menambahkan ${count} item ke keranjang.`);
+    };
+
+    const goToCart = () => {
+        navigation.navigate('cardOrders', { orders: cart });
+    };
+
     return (
         <SafeAreaView>
+       
             <View style={tw`mx-4 mt-4`}>
-                {/* Header */}
                 <View style={tw`flex-row items-center justify-between`}>
                     <AntDesign name="arrowleft" size={24} color="black" onPress={() => navigation.goBack()} />
                     <AntDesign name='setting' size={24} color='black' onPress={() => Alert.alert('Sedang dalam perbaikan')} />
                 </View>
 
-                {/* Gambar */}
                 <Image source={require('../assets/sateh.png')} style={tw`w-full h-80`} />
 
-                {/* Detail Item */}
                 <View>
                     <Text style={tw`font-bold text-2xl`}>{item?.name || "Produk"}</Text>
 
@@ -55,7 +101,6 @@ const DetailOrders = () => {
                         Lorem ipsum dolor sit amet, consectetur adipiscing elit sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.
                     </Text>
 
-                    {/* Harga & Jumlah */}
                     <View style={tw`flex-row items-center justify-between mt-4`}>
                         <View style={tw`bg-[#5CB85C] px-4 py-2 rounded-lg`}>
                             <Text style={tw`text-white`}>Rp {item?.price || 0}</Text>
@@ -80,14 +125,12 @@ const DetailOrders = () => {
                         </View>
                     </View>
 
-                    {/* Stok */}
                     <Text style={tw`mt-2 text-gray-600`}>Stok Tersisa: {stock}</Text>
 
-                    {/* Tombol */}
                     <View style={tw`flex-row items-center justify-between mt-2`}>
                         <TouchableOpacity
                             style={tw`bg-[#2E2E2E] px-4 py-3 rounded-lg mt-4`}
-                            onPress={() => Alert.alert("Ditambahkan ke Keranjang", `Anda telah menambahkan ${count} item.`)}
+                            onPress={addToCart}
                         >
                             <Text style={tw`text-white`}>Tambah Ke Keranjang</Text>
                         </TouchableOpacity>
@@ -98,8 +141,13 @@ const DetailOrders = () => {
                         >
                             <Text style={tw`text-white`}>Pesan Sekarang</Text>
                         </TouchableOpacity>
-
                     </View>
+                    <TouchableOpacity
+                        style={tw`bg-[#5CB85C] px-4 py-3 rounded-lg mt-4`}
+                        onPress={goToCart}
+                    >
+                        <Text style={tw`text-white text-center`}>Lihat Keranjang</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         </SafeAreaView>

@@ -9,14 +9,11 @@ import Signup from '../pages/Signup';
 import Main from '../pages/Main';
 import Singin from "../pages/Singin";
 import Akun from "../tabbottom/Akun";
-import Tugas from "../tabbottom/Tugas";
 import News from "../tabbottom/News";
-import LaporanKeuangan from "../tabbottom/LaporanKeuangan";
 import Question from "../etc/Question";
 import AdminPanel from "../pages/AdminPanel";
 import TabBarIcon from "../Components/TabBarIcon";
 import EditAccount from "../Services/EditAccount";
-import NilaiUang from "../etc/Kuis/level1/NilaiUang";
 import DetailOrders from "../orders/DetailOrders";
 import CardOrders from "../orders/CardOrders";
 
@@ -139,7 +136,6 @@ const UserNavigation = () => {
         <Stack.Screen name="signin" component={Singin} />
         <Stack.Screen name="Main" component={Main} />
         <Stack.Screen name="akun" component={Akun} />
-        <Stack.Screen name="tugas" component={Tugas}/>
         <Stack.Screen name="notification" component={Question}/>
         <Stack.Screen name="news" component={News}/>
         <Stack.Screen name="adminPanel" component={AdminPanel}/>
