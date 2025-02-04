@@ -6,7 +6,6 @@ import {
   Alert,
   Image,
   FlatList,
-  ScrollView,
   StatusBar,
 } from "react-native";
 import {
@@ -21,7 +20,6 @@ import { db, auth } from "../../firebase";
 import tw from "twrnc";
 import * as ImagePicker from "expo-image-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import { FontAwesome, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import Text from "../Shared/Text";
 
