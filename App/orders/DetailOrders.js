@@ -1,5 +1,5 @@
 import { View, Image, TouchableOpacity, Alert } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { AntDesign, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import tw from 'twrnc';
@@ -8,15 +8,15 @@ import Text from '../Shared/Text';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CartContext } from './CartContext';
 
-
 const DetailOrders = () => {
     const navigation = useNavigation();
-    const route = useRoute(); // Pindahkan ke atas sebelum destructuring
-    const { item, orders = [] } = route.params || {}; // Pastikan params tidak undefined
+    const route = useRoute();
+    const { item } = route.params || {}; 
     const [count, setCount] = useState(1);
-    const [stock, setStock] = useState(item?.stock || 0); // Tambahkan fallback jika item undefined
-    const [cart, setCart] = useState(CartContext);
-    
+    const [stock, setStock] = useState(item?.stock || 0);
+
+    // Gunakan useContext agar cart bisa digunakan dengan benar
+    const { cart, setCart } = useContext(CartContext); 
 
     useEffect(() => {
         const loadCart = async () => {
@@ -31,12 +31,11 @@ const DetailOrders = () => {
         };
         loadCart();
     }, []);
-
+    
 
     const increaseCount = () => {
         if (count < stock) {
             setCount(prev => prev + 1);
-            setStock(prev => prev - 1);
         } else {
             Alert.alert("Stok Habis", "Jumlah pesanan melebihi stok yang tersedia.");
         }
@@ -45,7 +44,6 @@ const DetailOrders = () => {
     const decreaseCount = () => {
         if (count > 1) {
             setCount(prev => prev - 1);
-            setStock(prev => prev + 1);
         }
     };
 
@@ -58,20 +56,24 @@ const DetailOrders = () => {
     };
 
     const addToCart = async () => {
-        const existingItem = cart.find(cartItem => cartItem.id === item.id);
-        let updatedCart;
+        try {
+            const existingItem = cart.find(cartItem => cartItem.id === item.id);
+            let updatedCart;
 
-        if (existingItem) {
-            updatedCart = cart.map(cartItem =>
-                cartItem.id === item.id ? { ...cartItem, count: cartItem.count + count } : cartItem
-            );
-        } else {
-            updatedCart = [...cart, { ...item, count }];
+            if (existingItem) {
+                updatedCart = cart.map(cartItem =>
+                    cartItem.id === item.id ? { ...cartItem, count: cartItem.count + count } : cartItem
+                );
+            } else {
+                updatedCart = [...cart, { ...item, count }];
+            }
+
+            setCart(updatedCart);
+            await saveCart(updatedCart);
+            Alert.alert("Berhasil", `Anda telah menambahkan ${count} item ke keranjang.`);
+        } catch (error) {
+            console.error("Error adding to cart: ", error);
         }
-
-        setCart(updatedCart);
-        await saveCart(updatedCart);
-        Alert.alert("Berhasil", `Anda telah menambahkan ${count} item ke keranjang.`);
     };
 
     const goToCart = () => {
@@ -80,7 +82,6 @@ const DetailOrders = () => {
 
     return (
         <SafeAreaView>
-       
             <View style={tw`mx-4 mt-4`}>
                 <View style={tw`flex-row items-center justify-between`}>
                     <AntDesign name="arrowleft" size={24} color="black" onPress={() => navigation.goBack()} />
@@ -125,7 +126,7 @@ const DetailOrders = () => {
                         </View>
                     </View>
 
-                    <Text style={tw`mt-2 text-gray-600`}>Stok Tersisa: {stock}</Text>
+                    <Text style={tw`mt-2 text-gray-600`}>Stok Tersisa: {stock - count}</Text>
 
                     <View style={tw`flex-row items-center justify-between mt-2`}>
                         <TouchableOpacity
@@ -142,6 +143,7 @@ const DetailOrders = () => {
                             <Text style={tw`text-white`}>Pesan Sekarang</Text>
                         </TouchableOpacity>
                     </View>
+
                     <TouchableOpacity
                         style={tw`bg-[#5CB85C] px-4 py-3 rounded-lg mt-4`}
                         onPress={goToCart}

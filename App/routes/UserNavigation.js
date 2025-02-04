@@ -16,6 +16,7 @@ import TabBarIcon from "../Components/TabBarIcon";
 import EditAccount from "../Services/EditAccount";
 import DetailOrders from "../orders/DetailOrders";
 import CardOrders from "../orders/CardOrders";
+import WaitingOrders from "../orders/WaitingOrders";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -86,8 +87,8 @@ const UserNavigation = () => {
         />
 
         <Tab.Screen
-          name="cardOrders"
-          component={CardOrders}
+          name="waitingOrders"
+          component={WaitingOrders}
           options={{
             tabBarIcon: () => (
               <MaterialCommunityIcons name="cart" size={34} color="#E3E3E3" />
@@ -142,6 +143,7 @@ const UserNavigation = () => {
         <Stack.Screen name="editAccount" component={EditAccount}/>
         <Stack.Screen name="detailOrders" component={DetailOrders}/>
         <Stack.Screen name="cardOrders" component={CardOrders}/>
+        <Stack.Screen name="waitingOrders" component={WaitingOrders}/>
 
         
       </Stack.Navigator>

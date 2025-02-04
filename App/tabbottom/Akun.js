@@ -44,17 +44,23 @@ export default function Akun() {
     }
   };
 
-   const updateUserDetails = async () => {
-      try {
-        const userDocRef = doc(db, 'users', userUID);
-        await updateDoc(userDocRef, { fullname, email, phoneNumber });
-        Alert.alert("Success", "Profile details updated successfully!");
-        setModalVisible(false); 
-      } catch (error) {
-        console.error("Error updating user details in Firestore: ", error);
-        Alert.alert("Error", "Failed to update profile details.");
-      }
-    };
+  const updateUserDetails = async () => {
+    try {
+      const userDocRef = doc(db, 'users', userUID);
+      await updateDoc(userDocRef, { 
+        fullname, 
+        email, 
+        phoneNumber,
+        address // Menambahkan address agar tersimpan di database
+      });
+      Alert.alert("Success", "Profile details updated successfully!");
+      setModalVisible(false); 
+    } catch (error) {
+      console.error("Error updating user details in Firestore: ", error);
+      Alert.alert("Error", "Failed to update profile details.");
+    }
+  };
+  
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {

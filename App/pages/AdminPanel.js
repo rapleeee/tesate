@@ -14,6 +14,7 @@ import {
   getDocs,
   deleteDoc,
   doc,
+  updateDoc,
 } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { db, auth } from "../../firebase";
@@ -26,6 +27,7 @@ import Text from "../Shared/Text";
 export default function AdminPanel({ navigation }) {
   const [category, setCategory] = useState("Makanan"); // Current category
   const [data, setData] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [form, setForm] = useState({
     name: "",
     stock: "",
@@ -35,6 +37,7 @@ export default function AdminPanel({ navigation }) {
 
   useEffect(() => {
     fetchData();
+    fetchOrders();
   }, [category]);
 
   const fetchData = async () => {
@@ -45,6 +48,33 @@ export default function AdminPanel({ navigation }) {
         ...doc.data(),
       }));
       setData(items);
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "orders"));
+      const items = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setOrders(items);
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    }
+  };
+
+  const updateOrderStatus = async (id, currentStatus) => {
+    let newStatus = "Menunggu Konfirmasi";
+    if (currentStatus === "Menunggu Konfirmasi") newStatus = "Sedang Dibuatkan";
+    else if (currentStatus === "Sedang Dibuatkan") newStatus = "Diantar";
+    
+    try {
+      await updateDoc(doc(db, "orders", id), { status: newStatus });
+      Alert.alert("Success", "Status updated successfully");
+      fetchOrders();
     } catch (error) {
       Alert.alert("Error", error.message);
     }
@@ -102,6 +132,27 @@ export default function AdminPanel({ navigation }) {
       Alert.alert("Error", error.message);
     }
   };
+
+
+  const renderOrderItem = ({ item }) => (
+    <View style={tw`bg-white rounded-xl shadow-lg p-4 mb-4`}>
+      <Text style={tw`font-bold text-lg`}>Pemesan: {item.customerName}</Text>
+      <Text>Alamat: {item.address}</Text>
+      <Text>Total: Rp {item.totalAmount}</Text>
+      <Text>Status: {item.status}</Text>
+      <Text style={tw`font-bold mt-2`}>Pesanan:</Text>
+      {item.orders.map((order, index) => (
+        <Text key={index}>{order.name} - {order.quantity} pcs</Text>
+      ))}
+      <TouchableOpacity
+        onPress={() => updateOrderStatus(item.id, item.status)}
+        style={tw`mt-2 p-2 bg-blue-500 rounded-lg`}
+      >
+        <Text style={tw`text-white text-center`}>Update Status</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
 
   const renderItem = ({ item }) => (
     <View
@@ -235,12 +286,24 @@ export default function AdminPanel({ navigation }) {
                 <Text style={tw`text-center text-gray-100`}>Lihat Pesanan</Text>
               </TouchableOpacity>
             </View>
-            <Text style={tw`text-xl font-bold mt-6 mb-4`}>
-              Order Monitoring
-            </Text>
-            <View style={tw`p-4 bg-white rounded-lg shadow-md`}>
-              <Text style={tw`text-center text-gray-500`}>No orders yet.</Text>
-            </View>
+            <FlatList
+        ListHeaderComponent={
+          <View style={tw`p-4`}>
+            <Text style={tw`text-xl font-bold mt-6 mb-4`}>Order Monitoring</Text>
+            {orders.length === 0 ? (
+              <View style={tw`p-4 bg-white rounded-lg shadow-md`}>
+                <Text style={tw`text-center text-gray-500`}>No orders yet.</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={orders}
+                renderItem={renderOrderItem}
+                keyExtractor={(item) => item.id}
+              />
+            )}
+          </View>
+        }
+      />
 
             <TouchableOpacity
               onPress={handleLogout}
