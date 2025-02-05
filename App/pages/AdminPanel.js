@@ -281,7 +281,7 @@ export default function AdminPanel({ navigation }) {
           <View style={tw`p-4`}>
             <View>
               <TouchableOpacity
-                style={tw`bg-neutral-800 p-4 rounded-lg shadow-md`}
+                style={tw`bg-neutral-800 p-4 rounded-lg shadow-md`} onPress={()=> navigation.navigate("completedOrders")}
               >
                 <Text style={tw`text-center text-gray-100`}>Lihat Pesanan</Text>
               </TouchableOpacity>

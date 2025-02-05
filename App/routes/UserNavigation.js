@@ -17,6 +17,7 @@ import EditAccount from "../Services/EditAccount";
 import DetailOrders from "../orders/DetailOrders";
 import CardOrders from "../orders/CardOrders";
 import WaitingOrders from "../orders/WaitingOrders";
+import CompletedOrders from "../pages/CompletedOrders";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -144,6 +145,7 @@ const UserNavigation = () => {
         <Stack.Screen name="detailOrders" component={DetailOrders}/>
         <Stack.Screen name="cardOrders" component={CardOrders}/>
         <Stack.Screen name="waitingOrders" component={WaitingOrders}/>
+        <Stack.Screen name="completedOrders" component={CompletedOrders}/>
 
         
       </Stack.Navigator>

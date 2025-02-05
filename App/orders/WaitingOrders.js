@@ -11,6 +11,8 @@ import {
   onSnapshot,
   updateDoc,
   doc,
+  query,
+  where,
 } from "firebase/firestore";
 import { db } from "../../firebase";
 import tw from "twrnc";
@@ -19,6 +21,7 @@ import { AntDesign } from "@expo/vector-icons";
 import Text from "../Shared/Text";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
+import { getAuth } from "firebase/auth";
 
 const WaitingOrders = () => {
   const navigation = useNavigation();
@@ -28,21 +31,50 @@ const WaitingOrders = () => {
   const biayaOngkir = 5000;
   const [countdown, setCountdown] = useState(35 * 60);
   const [orderDocId, setOrderDocId] = useState(null);
+  const auth = getAuth();
+
+
+  const formatCountdown = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
+  };
 
   useEffect(() => {
-    const ordersRef = collection(db, "orders");
-    const unsubscribe = onSnapshot(ordersRef, (snapshot) => {
-      const ordersData = snapshot.docs.map(doc => {
-        const data = doc.data();
-        if (data.orders) {
-          setOrderStatus(data.status || "Menunggu Konfirmasi");
-          setOrderDocId(doc.id);
-        }
-        return data.orders ? data.orders.map(order => ({ ...order, docId: doc.id })) : [];
-      }).flat();
-      setOrdersState(ordersData);
-    });
-    return () => unsubscribe();
+    const fetchOrders = async () => {
+      try {
+        if (!auth.currentUser) return;
+
+        const ordersRef = collection(db, "orders");
+        const q = query(ordersRef, where("userId", "==", auth.currentUser.uid));
+
+        const unsubscribe = onSnapshot(
+          q,
+          (snapshot) => {
+            const ordersData = snapshot.docs.map((doc) => {
+              const data = doc.data();
+              if (data.orders) {
+                setOrderStatus(data.status || "Menunggu Konfirmasi");
+                setOrderDocId(doc.id);
+              }
+              return data.orders
+                ? data.orders.map((order) => ({ ...order, docId: doc.id }))
+                : [];
+            }).flat();
+            setOrdersState(ordersData);
+          },
+          (error) => {
+            console.error("Error fetching orders:", error);
+          }
+        );
+
+        return () => unsubscribe();
+      } catch (error) {
+        console.error("Unexpected error in fetchOrders:", error);
+      }
+    };
+
+    fetchOrders();
   }, []);
 
   useEffect(() => {
@@ -54,7 +86,9 @@ const WaitingOrders = () => {
       const timer = setInterval(() => {
         setCountdown((prev) => {
           const newTime = prev - 1;
-          AsyncStorage.setItem("countdown", JSON.stringify(newTime));
+          AsyncStorage.setItem("countdown", JSON.stringify(newTime)).catch((error) =>
+            console.error("Error saving countdown:", error)
+          );
           return newTime;
         });
       }, 1000);
@@ -63,27 +97,32 @@ const WaitingOrders = () => {
   }, [countdown]);
 
   const loadCountdown = async () => {
-    const savedCountdown = await AsyncStorage.getItem("countdown");
-    if (savedCountdown) {
-      setCountdown(JSON.parse(savedCountdown));
+    try {
+      const savedCountdown = await AsyncStorage.getItem("countdown");
+      if (savedCountdown) {
+        setCountdown(JSON.parse(savedCountdown));
+      }
+    } catch (error) {
+      console.error("Error loading countdown:", error);
     }
-  };
-
-  const formatCountdown = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
   const handleOrderReceived = async () => {
-    if (orderDocId) {
-      await updateDoc(doc(db, "orders", orderDocId), {
-        status: "Diterima",
-      });
+    try {
+      if (orderDocId) {
+        await updateDoc(doc(db, "orders", orderDocId), {
+          status: "Diterima",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating order status:", error);
     }
   };
 
-  const totalPesanan = ordersState.reduce((acc, item) => acc + (item.price * (item.count || 1)), 0);
+  const totalPesanan = ordersState.reduce(
+    (acc, item) => acc + (item.price * (item.count || 1)),
+    0
+  );
   const totalBiaya = totalPesanan + biayaAplikasi + biayaOngkir;
 
   if (orderStatus === "Diterima") {

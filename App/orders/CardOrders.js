@@ -103,7 +103,7 @@ const CardOrders = () => {
                 <View style={tw`flex-row items-center justify-between`}>
                     <AntDesign name="arrowleft" size={24} color="black" onPress={() => navigation.goBack()} />
                     <Text style={tw`text-2xl font-bold text-black`}>Pesanan Kamu</Text>
-                    <AntDesign name="setting" size={24} color="black" onPress={() => alert('Sedang dalam perbaikan')} />
+                    <AntDesign name="setting" size={24} color="black" onPress={() => navigation.navigate("akun")} />
                 </View>
 
                 {ordersState.length === 0 ? (
@@ -161,13 +161,13 @@ const CardOrders = () => {
                                     <Text style={tw`text-white text-base font-semibold`}>Bayar Cash aja</Text>
                                 </View>
                             </TouchableOpacity>
-                            <TouchableOpacity style={tw`bg-[#680BB0] p-4 rounded-lg mb-2`}>
+                            <TouchableOpacity style={tw`bg-[#680BB0] p-4 rounded-lg mb-2`} onPress={()=> Alert.alert("Sedang dalam perbaikan")}>
                                 <View style={tw`flex-row items-center justify-between`}>
                                     <FontAwesome name="credit-card" size={24} color="white" />
                                     <Text style={tw`text-white text-base font-semibold`}>Bayar Pake Ovo</Text>
                                 </View>
                             </TouchableOpacity>
-                            <TouchableOpacity style={tw`bg-[#B00B3F] p-4 rounded-lg mb-2`}>
+                            <TouchableOpacity style={tw`bg-[#B00B3F] p-4 rounded-lg mb-2` } onPress={()=> Alert.alert("Sedang dalam perbaikan")}>
                                 <View style={tw`flex-row items-center justify-between`}>
                                     <Ionicons name="qr-code-outline" size={24} color="white" />
                                     <Text style={tw`text-white text-base font-semibold ml-2`}>Bayar Pake Qris</Text>

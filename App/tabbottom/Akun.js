@@ -113,7 +113,9 @@ export default function Akun() {
         }
       >
         <View style={tw`flex-row items-center justify-between px-4 `}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
           <AntDesign name="arrowleft" size={24} color={"white"} />
+        </TouchableOpacity>
           <Text style={tw`text-2xl text-neutral-100 font-bold text-center`}>
             Akun
           </Text>
